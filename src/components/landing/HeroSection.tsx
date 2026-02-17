@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, TrendingUp, Users, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
@@ -7,6 +8,7 @@ import heroBg from "@/assets/hero-bg.jpg";
 import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState([
     { icon: BookOpen, value: "...", label: "Cursos" },
     { icon: Users, value: "...", label: "Estudiantes" },
@@ -68,9 +70,9 @@ const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Link to="/register">
+              <Link to={user ? "/courses" : "/register"}>
                 <Button size="lg" className="bg-gold text-navy-dark hover:bg-gold-dark font-semibold text-base px-8 gap-2">
-                  Comenzar Gratis <ArrowRight className="h-5 w-5" />
+                  {user ? "Ver catálogo de cursos" : "Comenzar Gratis"} <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
             </div>
