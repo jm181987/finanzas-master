@@ -73,13 +73,6 @@ const HeroSection = () => {
                   Comenzar Gratis <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-primary-foreground/20 text-primary-foreground hover:bg-navy-light/50 gap-2"
-              >
-                <Play className="h-5 w-5" /> Ver Demo
-              </Button>
             </div>
 
             {/* Stats */}
