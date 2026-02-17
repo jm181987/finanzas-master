@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const navLinks = [
     { label: "Inicio", href: "#hero" },
@@ -15,16 +18,19 @@ const Navbar = () => {
     { label: "Testimonios", href: "#testimonios" },
   ];
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-navy/95 backdrop-blur-md border-b border-navy-light/30">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo */}
           <Link to="/" className="flex items-center">
             <img src={logo} alt="FinanzasMaster" className="h-10 lg:h-12 w-auto" />
           </Link>
 
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <a
@@ -37,21 +43,38 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-navy-light/50">
-                Iniciar Sesión
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button className="bg-gold text-navy-dark hover:bg-gold-dark font-semibold">
-                Registrarse
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link to="/dashboard">
+                  <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-navy-light/50 gap-2">
+                    <LayoutDashboard className="h-4 w-4" /> Mi Panel
+                  </Button>
+                </Link>
+                <Button
+                  onClick={handleSignOut}
+                  variant="ghost"
+                  className="text-primary-foreground/80 hover:text-gold hover:bg-navy-light/50 gap-2"
+                >
+                  <LogOut className="h-4 w-4" /> Salir
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-navy-light/50">
+                    Iniciar Sesión
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button className="bg-gold text-navy-dark hover:bg-gold-dark font-semibold">
+                    Registrarse
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
-          {/* Mobile Menu Toggle */}
           <button
             className="md:hidden text-primary-foreground"
             onClick={() => setIsOpen(!isOpen)}
@@ -61,7 +84,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -82,16 +104,35 @@ const Navbar = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-3 border-t border-navy-light/30">
-                <Link to="/login">
-                  <Button variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold">
-                    Iniciar Sesión
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button className="w-full bg-gold text-navy-dark hover:bg-gold-dark font-semibold">
-                    Registrarse
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold gap-2">
+                        <LayoutDashboard className="h-4 w-4" /> Mi Panel
+                      </Button>
+                    </Link>
+                    <Button
+                      onClick={() => { handleSignOut(); setIsOpen(false); }}
+                      variant="ghost"
+                      className="w-full text-primary-foreground/80 hover:text-gold gap-2"
+                    >
+                      <LogOut className="h-4 w-4" /> Salir
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold">
+                        Iniciar Sesión
+                      </Button>
+                    </Link>
+                    <Link to="/register" onClick={() => setIsOpen(false)}>
+                      <Button className="w-full bg-gold text-navy-dark hover:bg-gold-dark font-semibold">
+                        Registrarse
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
