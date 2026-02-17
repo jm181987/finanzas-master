@@ -28,7 +28,10 @@ const Navbar = () => {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           <Link to="/" className="flex items-center">
-            <img src={logo} alt="FinanzasMaster" className="h-10 lg:h-12 w-auto" />
+            <div className="relative flex items-center">
+              <div className="absolute inset-0 rounded-full blur-xl opacity-60" style={{ background: "radial-gradient(ellipse, hsl(var(--gold)) 0%, transparent 70%)", transform: "scale(1.8)" }} />
+              <img src={logo} alt="FinanzasMaster" className="relative h-10 lg:h-12 w-auto drop-shadow-[0_0_12px_hsl(var(--gold)/0.8)]" />
+            </div>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
