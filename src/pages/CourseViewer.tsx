@@ -1,0 +1,506 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  ChevronLeft, ChevronRight, CheckCircle2, Circle, Lock,
+  Play, FileText, File, BookOpen, Menu, X, LogIn
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+
+interface Course {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  is_free: boolean;
+  price: number;
+  author_name: string;
+}
+
+interface Lesson {
+  id: string;
+  title: string;
+  content_type: string;
+  video_url: string | null;
+  content_text: string | null;
+  pdf_url: string | null;
+  duration_minutes: number | null;
+  is_free_preview: boolean;
+  sort_order: number;
+  completed?: boolean;
+}
+
+interface Module {
+  id: string;
+  title: string;
+  sort_order: number;
+  lessons: Lesson[];
+}
+
+const contentIcon = (type: string) => {
+  if (type === "video") return <Play className="h-3.5 w-3.5" />;
+  if (type === "pdf") return <File className="h-3.5 w-3.5" />;
+  return <FileText className="h-3.5 w-3.5" />;
+};
+
+// Extract YouTube video ID
+const getYouTubeId = (url: string) => {
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?/]+)/);
+  return match ? match[1] : null;
+};
+
+const CourseViewer = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const [course, setCourse] = useState<Course | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [enrolled, setEnrolled] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (id) fetchCourse();
+  }, [id, user]);
+
+  const fetchCourse = async () => {
+    setLoading(true);
+    try {
+      // Fetch course
+      const { data: courseData, error: courseError } = await supabase
+        .from("courses")
+        .select("id, title, description, image_url, is_free, price, author_id")
+        .eq("id", id!)
+        .eq("is_published", true)
+        .eq("status", "approved")
+        .single();
+
+      if (courseError || !courseData) {
+        navigate("/");
+        return;
+      }
+
+      // Get author name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", courseData.author_id)
+        .single();
+
+      setCourse({
+        ...courseData,
+        author_name: profile?.full_name || "Instructor",
+      });
+
+      // Check enrollment
+      let isEnrolled = false;
+      if (user) {
+        const { data: enrollment } = await supabase
+          .from("enrollments")
+          .select("id")
+          .eq("course_id", id!)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        isEnrolled = !!enrollment;
+        setEnrolled(isEnrolled);
+      }
+
+      // Fetch modules + lessons
+      const { data: mods } = await supabase
+        .from("modules")
+        .select("id, title, sort_order")
+        .eq("course_id", id!)
+        .order("sort_order");
+
+      const { data: lessonRows } = await supabase
+        .from("lessons")
+        .select("id, title, content_type, video_url, content_text, pdf_url, duration_minutes, is_free_preview, sort_order, module_id")
+        .in("module_id", (mods || []).map((m) => m.id))
+        .order("sort_order");
+
+      // Fetch completed lessons
+      let completed = new Set<string>();
+      if (user) {
+        const { data: progress } = await supabase
+          .from("lesson_progress")
+          .select("lesson_id")
+          .eq("user_id", user.id)
+          .eq("completed", true);
+        completed = new Set((progress || []).map((p) => p.lesson_id));
+        setCompletedIds(completed);
+      }
+
+      const builtModules: Module[] = (mods || []).map((mod) => ({
+        ...mod,
+        lessons: (lessonRows || [])
+          .filter((l) => l.module_id === mod.id)
+          .map((l) => ({ ...l, completed: completed.has(l.id) })),
+      }));
+
+      setModules(builtModules);
+      setExpandedModules(new Set((mods || []).map((m) => m.id)));
+
+      // Set first accessible lesson as active
+      const firstLesson = builtModules.flatMap((m) => m.lessons).find((l) =>
+        isEnrolled || courseData.is_free || l.is_free_preview
+      );
+      if (firstLesson) setActiveLesson(firstLesson);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnroll = async () => {
+    if (!user) {
+      navigate("/login", { state: { from: `/courses/${id}` } });
+      return;
+    }
+    setEnrolling(true);
+    try {
+      const { error } = await supabase
+        .from("enrollments")
+        .insert({ user_id: user.id, course_id: id! });
+      if (error) throw error;
+      setEnrolled(true);
+      toast({ title: "¡Inscripción exitosa!", description: "Ya tienes acceso a todo el contenido." });
+      fetchCourse();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const markCompleted = async (lessonId: string) => {
+    if (!user || !enrolled) return;
+    if (completedIds.has(lessonId)) return;
+    try {
+      await supabase.from("lesson_progress").upsert({
+        user_id: user.id,
+        lesson_id: lessonId,
+        completed: true,
+        completed_at: new Date().toISOString(),
+      });
+      setCompletedIds((prev) => new Set([...prev, lessonId]));
+      setModules((prev) =>
+        prev.map((mod) => ({
+          ...mod,
+          lessons: mod.lessons.map((l) =>
+            l.id === lessonId ? { ...l, completed: true } : l
+          ),
+        }))
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const selectLesson = (lesson: Lesson) => {
+    const canAccess = enrolled || course?.is_free || lesson.is_free_preview;
+    if (!canAccess) {
+      toast({ title: "Contenido bloqueado", description: "Inscríbete para acceder a esta lección.", variant: "destructive" });
+      return;
+    }
+    setActiveLesson(lesson);
+    if (enrolled) markCompleted(lesson.id);
+  };
+
+  const allLessons = modules.flatMap((m) => m.lessons);
+  const completedCount = allLessons.filter((l) => completedIds.has(l.id)).length;
+  const progressPct = allLessons.length > 0 ? Math.round((completedCount / allLessons.length) * 100) : 0;
+
+  const currentIndex = activeLesson ? allLessons.findIndex((l) => l.id === activeLesson.id) : -1;
+  const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
+  const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Cargando curso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) return null;
+
+  // --- Not enrolled / not free: show landing CTA ---
+  if (!enrolled && !course.is_free) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border px-6 py-4 flex items-center gap-4">
+          <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <ChevronLeft className="h-5 w-5" />
+            <span className="text-sm">Inicio</span>
+          </Link>
+        </header>
+        <div className="max-w-4xl mx-auto px-6 py-16 text-center">
+          {course.image_url && (
+            <img src={course.image_url} alt={course.title} className="w-full max-h-64 object-cover rounded-2xl mb-8" />
+          )}
+          <Badge className="mb-4 bg-secondary/10 text-secondary border-0">{course.is_free ? "Gratis" : `$${Number(course.price).toFixed(2)}`}</Badge>
+          <h1 className="text-3xl font-display font-bold text-foreground mb-4">{course.title}</h1>
+          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">{course.description}</p>
+          <p className="text-sm text-muted-foreground mb-6">Instructor: <span className="font-medium text-foreground">{course.author_name}</span></p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {user ? (
+              <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90" onClick={handleEnroll} disabled={enrolling}>
+                {enrolling ? "Inscribiendo..." : `Inscribirme${!course.is_free ? ` — $${Number(course.price).toFixed(2)}` : ""}`}
+              </Button>
+            ) : (
+              <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90" onClick={() => navigate("/login", { state: { from: `/courses/${id}` } })}>
+                <LogIn className="h-4 w-4 mr-2" />
+                Iniciar sesión para inscribirme
+              </Button>
+            )}
+            <Button size="lg" variant="outline" onClick={() => navigate("/")}>Volver al inicio</Button>
+          </div>
+
+          {/* Preview lessons */}
+          <div className="mt-12 text-left">
+            <h2 className="text-xl font-semibold text-foreground mb-6">Contenido del curso</h2>
+            {modules.map((mod) => (
+              <div key={mod.id} className="mb-6">
+                <h3 className="text-base font-medium text-foreground mb-3 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-secondary" /> {mod.title}
+                </h3>
+                <div className="space-y-2 pl-6">
+                  {mod.lessons.map((lesson) => (
+                    <div key={lesson.id} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-muted/30 text-sm">
+                      {lesson.is_free_preview ? contentIcon(lesson.content_type) : <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+                      <span className={lesson.is_free_preview ? "text-foreground" : "text-muted-foreground"}>{lesson.title}</span>
+                      {lesson.is_free_preview && <Badge className="ml-auto text-xs bg-emerald-500/10 text-emerald-600 border-0">Preview</Badge>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Course viewer (enrolled or free) ---
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top bar */}
+      <header className="h-14 border-b border-border flex items-center px-4 gap-4 shrink-0 z-10 bg-background">
+        <button onClick={() => setSidebarOpen((o) => !o)} className="text-muted-foreground hover:text-foreground transition-colors">
+          {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+        <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm">
+          <ChevronLeft className="h-4 w-4" /> Inicio
+        </Link>
+        <span className="text-muted-foreground">·</span>
+        <h1 className="font-semibold text-foreground text-sm line-clamp-1 flex-1">{course.title}</h1>
+        {enrolled && (
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-muted-foreground hidden sm:block">{progressPct}% completado</span>
+            <div className="w-24 hidden sm:block">
+              <Progress value={progressPct} className="h-1.5" />
+            </div>
+          </div>
+        )}
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        {sidebarOpen && (
+          <aside className="w-72 border-r border-border bg-card overflow-y-auto shrink-0 hidden md:block">
+            <div className="p-4">
+              {enrolled && (
+                <div className="mb-4 p-3 rounded-xl bg-secondary/10">
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                    <span>Progreso</span>
+                    <span>{completedCount}/{allLessons.length} lecciones</span>
+                  </div>
+                  <Progress value={progressPct} className="h-2" />
+                </div>
+              )}
+
+              {modules.map((mod) => (
+                <div key={mod.id} className="mb-4">
+                  <button
+                    onClick={() => setExpandedModules((prev) => {
+                      const next = new Set(prev);
+                      next.has(mod.id) ? next.delete(mod.id) : next.add(mod.id);
+                      return next;
+                    })}
+                    className="w-full flex items-center justify-between text-left px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <span className="text-sm font-semibold text-foreground">{mod.title}</span>
+                    <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${expandedModules.has(mod.id) ? "rotate-90" : ""}`} />
+                  </button>
+
+                  {expandedModules.has(mod.id) && (
+                    <div className="mt-1 space-y-0.5">
+                      {mod.lessons.map((lesson) => {
+                        const canAccess = enrolled || course.is_free || lesson.is_free_preview;
+                        const isActive = activeLesson?.id === lesson.id;
+                        return (
+                          <button
+                            key={lesson.id}
+                            onClick={() => selectLesson(lesson)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors text-sm ${
+                              isActive
+                                ? "bg-secondary/10 text-secondary font-medium"
+                                : canAccess
+                                ? "hover:bg-muted/50 text-foreground"
+                                : "text-muted-foreground cursor-not-allowed"
+                            }`}
+                          >
+                            {completedIds.has(lesson.id) ? (
+                              <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                            ) : canAccess ? (
+                              <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                            ) : (
+                              <Lock className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                            )}
+                            <span className="line-clamp-2 flex-1">{lesson.title}</span>
+                            <span className="text-muted-foreground ml-auto shrink-0">{contentIcon(lesson.content_type)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </aside>
+        )}
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto">
+          {activeLesson ? (
+            <motion.div
+              key={activeLesson.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-4xl mx-auto px-4 sm:px-8 py-8"
+            >
+              {/* Video */}
+              {activeLesson.content_type === "video" && activeLesson.video_url && (
+                <div className="mb-8 rounded-2xl overflow-hidden bg-black aspect-video">
+                  {getYouTubeId(activeLesson.video_url) ? (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${getYouTubeId(activeLesson.video_url)}`}
+                      className="w-full h-full"
+                      allowFullScreen
+                      title={activeLesson.title}
+                    />
+                  ) : (
+                    <video src={activeLesson.video_url} controls className="w-full h-full" />
+                  )}
+                </div>
+              )}
+
+              {/* PDF */}
+              {activeLesson.content_type === "pdf" && activeLesson.pdf_url && (
+                <div className="mb-8">
+                  <iframe src={activeLesson.pdf_url} className="w-full h-[70vh] rounded-2xl border border-border" title={activeLesson.title} />
+                </div>
+              )}
+
+              {/* Lesson header */}
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl font-display font-bold text-foreground">{activeLesson.title}</h2>
+                  {activeLesson.duration_minutes && (
+                    <p className="text-sm text-muted-foreground mt-1">{activeLesson.duration_minutes} min de lectura</p>
+                  )}
+                </div>
+                {enrolled && !completedIds.has(activeLesson.id) && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 shrink-0"
+                    onClick={() => markCompleted(activeLesson.id)}
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                    Marcar completa
+                  </Button>
+                )}
+                {completedIds.has(activeLesson.id) && (
+                  <Badge className="bg-emerald-500/10 text-emerald-600 border-0 shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Completada
+                  </Badge>
+                )}
+              </div>
+
+              {/* Text content */}
+              {activeLesson.content_text && (
+                <div className="prose prose-sm max-w-none text-foreground bg-card rounded-2xl p-6 border border-border">
+                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{activeLesson.content_text}</pre>
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex items-center justify-between mt-10 pt-6 border-t border-border">
+                <Button
+                  variant="outline"
+                  disabled={!prevLesson}
+                  onClick={() => prevLesson && selectLesson(prevLesson)}
+                  className="flex items-center gap-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:block">Anterior</span>
+                </Button>
+
+                <span className="text-xs text-muted-foreground">
+                  {currentIndex + 1} / {allLessons.length}
+                </span>
+
+                <Button
+                  disabled={!nextLesson}
+                  onClick={() => {
+                    if (enrolled && !completedIds.has(activeLesson.id)) markCompleted(activeLesson.id);
+                    if (nextLesson) selectLesson(nextLesson);
+                  }}
+                  className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                >
+                  <span className="hidden sm:block">Siguiente</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center p-12">
+                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Selecciona una lección para comenzar</p>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Mobile: enroll CTA if not enrolled */}
+      {!enrolled && !course.is_free && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
+          <Button className="w-full bg-secondary text-secondary-foreground" onClick={handleEnroll} disabled={enrolling}>
+            {enrolling ? "Inscribiendo..." : "Inscribirme al curso"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CourseViewer;
