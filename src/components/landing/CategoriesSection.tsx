@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, PiggyBank, CreditCard, BookOpen, Wrench, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const iconMap: Record<string, React.ElementType> = {
   TrendingUp, PiggyBank, CreditCard, GraduationCap: BookOpen, Wrench, Brain,
@@ -27,6 +28,7 @@ const categoryDescriptions: Record<string, string> = {
 
 const CategoriesSection = () => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -91,6 +93,7 @@ const CategoriesSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
+                onClick={() => navigate(`/courses?category=${cat.id}`)}
                 className="group p-6 rounded-2xl border border-border bg-card hover:border-secondary/40 hover:shadow-lg hover:shadow-secondary/5 transition-all duration-300 cursor-pointer"
               >
                 <div className="h-12 w-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
