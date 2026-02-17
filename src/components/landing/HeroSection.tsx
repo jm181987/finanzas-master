@@ -24,7 +24,7 @@ const HeroSection = () => {
 
       const courseCount = (coursesData || []).length;
       // Sum total_students across all published courses
-      const studentCount = (coursesData || []).reduce((sum, c) => sum + (c.total_students || 0), 0);
+      const studentCount = 750 + (coursesData || []).reduce((sum, c) => sum + (c.total_students || 0), 0);
 
       const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(0)}K+` : n > 0 ? `${n}+` : "0";
 
