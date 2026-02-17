@@ -44,45 +44,46 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-navy-dark/95 via-navy/85 to-navy/60" />
       </div>
 
-      <div className="container mx-auto px-4 lg:px-8 relative z-10 pt-24 pb-16">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-24 pb-16">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Content */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
+            className="text-center lg:text-left"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold/15 text-gold text-sm font-medium mb-6">
-              <TrendingUp className="h-4 w-4" />
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold/15 text-gold text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Plataforma #1 en Educación Financiera
             </span>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-primary-foreground leading-tight mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-primary-foreground leading-tight mb-4 sm:mb-6">
               Domina tus{" "}
               <span className="text-gold">finanzas</span>,{" "}
               transforma tu{" "}
               <span className="text-gold">futuro</span>
             </h1>
 
-            <p className="text-lg text-primary-foreground/70 mb-8 max-w-lg leading-relaxed">
+            <p className="text-base sm:text-lg text-primary-foreground/70 mb-6 sm:mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
               Aprende de expertos en inversiones, ahorro inteligente y educación financiera. 
               Cursos en video, PDFs descargables y contenido práctico para alcanzar tu libertad financiera.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Link to={user ? "/courses" : "/register"}>
-                <Button size="lg" className="bg-gold text-navy-dark hover:bg-gold-dark font-semibold text-base px-8 gap-2">
+            <div className="flex flex-col sm:flex-row gap-4 mb-8 sm:mb-12 justify-center lg:justify-start">
+              <Link to={user ? "/courses" : "/register"} className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-gold text-navy-dark hover:bg-gold-dark font-semibold text-base px-8 gap-2">
                   {user ? "Ver catálogo de cursos" : "Comenzar Gratis"} <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
             </div>
 
             {/* Stats */}
-            <div className="flex gap-8">
+            <div className="flex gap-6 sm:gap-8 justify-center lg:justify-start">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <stat.icon className="h-5 w-5 text-gold mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-primary-foreground">{stat.value}</div>
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-gold mx-auto mb-1" />
+                  <div className="text-xl sm:text-2xl font-bold text-primary-foreground">{stat.value}</div>
                   <div className="text-xs text-primary-foreground/50">{stat.label}</div>
                 </div>
               ))}
