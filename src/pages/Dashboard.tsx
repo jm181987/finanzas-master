@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { BookOpen, TrendingUp, Award, CheckCircle2, Play, Trophy, KeyRound, Eye, EyeOff } from "lucide-react";
+import { BookOpen, TrendingUp, Award, CheckCircle2, Play, Trophy, KeyRound, Eye, EyeOff, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,7 @@ const Dashboard = () => {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [savingPwd, setSavingPwd] = useState(false);
+  const [pwdOpen, setPwdOpen] = useState(false);
 
   useEffect(() => {
     if (user) fetchEnrollments();
@@ -275,53 +276,62 @@ const Dashboard = () => {
           </Card>
           {/* Password change */}
           <Card className="border-border mt-8">
-            <CardHeader className="flex flex-row items-center gap-2 pb-2">
-              <KeyRound className="h-5 w-5 text-secondary" />
-              <CardTitle className="font-display text-base">Cambiar contraseña</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 max-w-sm">
-              <div className="space-y-1.5">
-                <Label>Nueva contraseña</Label>
-                <div className="relative">
-                  <Input
-                    type={showNew ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNew((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
+            <button
+              onClick={() => setPwdOpen((v) => !v)}
+              className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-muted/30 transition-colors rounded-xl"
+            >
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-secondary" />
+                <span className="font-semibold text-foreground text-sm">Cambiar contraseña</span>
               </div>
-              <div className="space-y-1.5">
-                <Label>Confirmar nueva contraseña</Label>
-                <div className="relative">
-                  <Input
-                    type={showConfirm ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${pwdOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {pwdOpen && (
+              <CardContent className="space-y-4 max-w-sm pt-0 pb-6">
+                <div className="space-y-1.5">
+                  <Label>Nueva contraseña</Label>
+                  <div className="relative">
+                    <Input
+                      type={showNew ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNew((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <Button onClick={handlePasswordChange} disabled={savingPwd} className="w-full">
-                {savingPwd ? "Guardando..." : "Actualizar contraseña"}
-              </Button>
-            </CardContent>
+                <div className="space-y-1.5">
+                  <Label>Confirmar nueva contraseña</Label>
+                  <div className="relative">
+                    <Input
+                      type={showConfirm ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <Button onClick={handlePasswordChange} disabled={savingPwd} className="w-full">
+                  {savingPwd ? "Guardando..." : "Actualizar contraseña"}
+                </Button>
+              </CardContent>
+            )}
           </Card>
         </div>
       </main>
