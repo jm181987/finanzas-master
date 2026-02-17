@@ -71,23 +71,23 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-foreground mb-1">Dashboard</h2>
-        <p className="text-muted-foreground">Resumen general de la plataforma</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Dashboard</h2>
+        <p className="text-muted-foreground text-sm sm:text-base">Resumen general de la plataforma</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {cards.map((card) => (
           <Card key={card.label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground font-sans">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 sm:p-6 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground font-sans leading-tight">
                 {card.label}
               </CardTitle>
-              <card.icon className={`h-5 w-5 ${card.color}`} />
+              <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 shrink-0 ${card.color}`} />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground font-sans">{card.value}</div>
+            <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-foreground font-sans">{card.value}</div>
             </CardContent>
           </Card>
         ))}

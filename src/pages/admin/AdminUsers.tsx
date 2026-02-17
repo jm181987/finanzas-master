@@ -179,14 +179,14 @@ const AdminUsers = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-foreground mb-1">Gestión de Usuarios</h2>
-          <p className="text-muted-foreground">Administra los usuarios y sus roles</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Gestión de Usuarios</h2>
+          <p className="text-muted-foreground text-sm">Administra los usuarios y sus roles</p>
         </div>
         {canManage && (
-          <Button onClick={openCreate} className="gap-2">
+          <Button onClick={openCreate} className="gap-2 w-full sm:w-auto">
             <UserPlus className="h-4 w-4" /> Agregar Usuario
           </Button>
         )}
@@ -203,8 +203,8 @@ const AdminUsers = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="font-sans text-lg">Usuarios ({filtered.length})</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="font-sans text-base sm:text-lg">Usuarios ({filtered.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -212,30 +212,82 @@ const AdminUsers = () => {
               {[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-muted rounded animate-pulse" />)}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Rol Actual</TableHead>
-                  <TableHead>Registrado</TableHead>
-                  <TableHead>Cambiar Rol</TableHead>
-                  {canManage && <TableHead>Acciones</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.full_name || "Sin nombre"}</TableCell>
-                    <TableCell>
+            <>
+              {/* Desktop table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Rol Actual</TableHead>
+                      <TableHead>Registrado</TableHead>
+                      <TableHead>Cambiar Rol</TableHead>
+                      {canManage && <TableHead>Acciones</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.full_name || "Sin nombre"}</TableCell>
+                        <TableCell>
+                          <Badge variant={roleBadgeVariant[user.role]}>{roleLabels[user.role]}</Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(user.created_at).toLocaleDateString("es-ES")}
+                        </TableCell>
+                        <TableCell>
+                          {canManage ? (
+                            <Select value={user.role} onValueChange={(val) => handleRoleChange(user.id, val)}>
+                              <SelectTrigger className="w-40">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="user">Usuario</SelectItem>
+                                <SelectItem value="developer">Desarrollador</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge variant={roleBadgeVariant[user.role]}>{roleLabels[user.role]}</Badge>
+                          )}
+                        </TableCell>
+                        {canManage && (
+                          <TableCell>
+                            <Button size="sm" variant="outline" className="gap-1" onClick={() => openEdit(user)}>
+                              <Pencil className="h-3.5 w-3.5" /> Editar
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                    {filtered.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={canManage ? 5 : 4} className="text-center text-muted-foreground py-8">
+                          No se encontraron usuarios
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="sm:hidden space-y-3">
+                {filtered.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8 text-sm">No se encontraron usuarios</p>
+                ) : filtered.map((user) => (
+                  <div key={user.id} className="border border-border rounded-xl p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-foreground text-sm">{user.full_name || "Sin nombre"}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(user.created_at).toLocaleDateString("es-ES")}</p>
+                      </div>
                       <Badge variant={roleBadgeVariant[user.role]}>{roleLabels[user.role]}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(user.created_at).toLocaleDateString("es-ES")}
-                    </TableCell>
-                    <TableCell>
-                      {canManage ? (
+                    </div>
+                    {canManage && (
+                      <div className="flex gap-2">
                         <Select value={user.role} onValueChange={(val) => handleRoleChange(user.id, val)}>
-                          <SelectTrigger className="w-40">
+                          <SelectTrigger className="flex-1 h-8 text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -244,28 +296,15 @@ const AdminUsers = () => {
                             <SelectItem value="admin">Admin</SelectItem>
                           </SelectContent>
                         </Select>
-                      ) : (
-                        <Badge variant={roleBadgeVariant[user.role]}>{roleLabels[user.role]}</Badge>
-                      )}
-                    </TableCell>
-                    {canManage && (
-                      <TableCell>
-                        <Button size="sm" variant="outline" className="gap-1" onClick={() => openEdit(user)}>
-                          <Pencil className="h-3.5 w-3.5" /> Editar
+                        <Button size="sm" variant="outline" className="gap-1 h-8 text-xs" onClick={() => openEdit(user)}>
+                          <Pencil className="h-3 w-3" /> Editar
                         </Button>
-                      </TableCell>
+                      </div>
                     )}
-                  </TableRow>
+                  </div>
                 ))}
-                {filtered.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={canManage ? 5 : 4} className="text-center text-muted-foreground py-8">
-                      No se encontraron usuarios
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
