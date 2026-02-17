@@ -225,6 +225,11 @@ const CourseViewer = () => {
       if (error) throw error;
       setEnrolled(true);
       toast({ title: "¡Inscripción exitosa!", description: "Ya tienes acceso a todo el contenido." });
+      // Sync total_students in background
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-stats`, {
+        method: "POST",
+        headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+      }).catch(() => null);
       fetchCourse();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
