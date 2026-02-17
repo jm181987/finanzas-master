@@ -6,7 +6,7 @@ const testimonials = [
   {
     name: "María López",
     role: "Emprendedora",
-    text: "Gracias a FinanzasMaster aprendí a invertir de forma inteligente. En 6 meses duplicé mis ahorros siguiendo las estrategias del curso de inversiones.",
+    text: "Gracias a FinanzasMaster aprendí a invertir de forma inteligente. En 6 meses duplique mis ahorros siguiendo las estrategias del curso de inversiones.",
     rating: 5,
     initials: "ML",
   },
