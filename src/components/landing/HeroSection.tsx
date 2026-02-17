@@ -1,16 +1,39 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, TrendingUp, Users, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
-
-const stats = [
-  { icon: BookOpen, value: "150+", label: "Cursos" },
-  { icon: Users, value: "25K+", label: "Estudiantes" },
-  { icon: TrendingUp, value: "95%", label: "Satisfacción" },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
+  const [stats, setStats] = useState([
+    { icon: BookOpen, value: "...", label: "Cursos" },
+    { icon: Users, value: "...", label: "Estudiantes" },
+    { icon: TrendingUp, value: "95%", label: "Satisfacción" },
+  ]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const [coursesRes, enrollmentsRes] = await Promise.all([
+        supabase.from("courses").select("id", { count: "exact", head: true }).eq("is_published", true).eq("status", "approved"),
+        supabase.from("enrollments").select("id", { count: "exact", head: true }),
+      ]);
+
+      const courseCount = coursesRes.count || 0;
+      const studentCount = enrollmentsRes.count || 0;
+
+      const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(0)}K+` : n > 0 ? `${n}+` : "0";
+
+      setStats([
+        { icon: BookOpen, value: courseCount > 0 ? `${courseCount}+` : "0", label: "Cursos" },
+        { icon: Users, value: fmt(studentCount), label: "Estudiantes" },
+        { icon: TrendingUp, value: "95%", label: "Satisfacción" },
+      ]);
+    };
+    fetchStats();
+  }, []);
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background */}
@@ -115,3 +138,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+
