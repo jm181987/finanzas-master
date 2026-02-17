@@ -35,7 +35,7 @@ const App = () => (
 
             {/* Protected routes - require authentication */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/courses/:id" element={<CourseViewer />} />
+            <Route path="/courses/:id" element={<ProtectedRoute><CourseViewer /></ProtectedRoute>} />
 
             {/* Admin routes */}
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
