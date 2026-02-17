@@ -1,5 +1,5 @@
-import { GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo.png";
 
 const Footer = () => {
   return (
@@ -8,11 +8,8 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-10">
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <GraduationCap className="h-7 w-7 text-gold" />
-              <span className="text-lg font-display font-bold text-primary-foreground">
-                Finanzas<span className="text-gold">Master</span>
-              </span>
+            <Link to="/" className="flex items-center mb-4">
+              <img src={logo} alt="FinanzasMaster" className="h-10 w-auto brightness-0 invert" />
             </Link>
             <p className="text-sm text-primary-foreground/50 leading-relaxed">
               La plataforma líder en educación financiera en español. Aprende, invierte y transforma tu futuro.

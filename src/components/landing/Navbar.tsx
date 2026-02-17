@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, GraduationCap } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,11 +20,8 @@ const Navbar = () => {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <GraduationCap className="h-8 w-8 text-gold" />
-            <span className="text-xl font-display font-bold text-primary-foreground">
-              Finanzas<span className="text-gold">Master</span>
-            </span>
+          <Link to="/" className="flex items-center">
+            <img src={logo} alt="FinanzasMaster" className="h-10 lg:h-12 w-auto" />
           </Link>
 
           {/* Desktop Nav */}
