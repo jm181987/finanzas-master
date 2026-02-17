@@ -15,18 +15,15 @@ const HeroSection = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      // Fetch published courses with total_students (publicly accessible without RLS issues)
-      const { data: coursesData } = await supabase
-        .from("courses")
-        .select("id, total_students")
-        .eq("is_published", true)
-        .eq("status", "approved");
+      const [coursesRes, profilesRes] = await Promise.all([
+        supabase.from("courses").select("id", { count: "exact", head: true }).eq("is_published", true).eq("status", "approved"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+      ]);
 
-      const courseCount = (coursesData || []).length;
-      // Sum total_students across all published courses
-      const studentCount = 750 + (coursesData || []).reduce((sum, c) => sum + (c.total_students || 0), 0);
+      const courseCount = coursesRes.count || 0;
+      const studentCount = 750 + (profilesRes.count || 0);
 
-      const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(0)}K+` : n > 0 ? `${n}+` : "0";
+      const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}K+` : `${n}+`;
 
       setStats([
         { icon: BookOpen, value: courseCount > 0 ? `${courseCount}+` : "0", label: "Cursos" },
