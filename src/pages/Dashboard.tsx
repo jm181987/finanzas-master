@@ -191,7 +191,7 @@ const Dashboard = () => {
                     const pct = course.lesson_count > 0
                       ? Math.round((course.completed_lessons / course.lesson_count) * 100)
                       : 0;
-                    const isDone = !!course.completed_at;
+                    const isDone = !!course.completed_at || (course.lesson_count > 0 && course.completed_lessons >= course.lesson_count);
 
                     return (
                       <Link
