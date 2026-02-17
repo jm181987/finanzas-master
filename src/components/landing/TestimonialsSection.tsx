@@ -28,24 +28,24 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section id="testimonios" className="py-20 bg-navy relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-72 h-72 bg-gold/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
+    <section id="testimonios" className="py-12 sm:py-20 bg-navy relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-48 sm:w-72 h-48 sm:h-72 bg-gold/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-gold/5 rounded-full blur-3xl" />
 
-      <div className="container mx-auto px-4 lg:px-8 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-10 sm:mb-14"
         >
           <span className="text-sm font-semibold text-gold uppercase tracking-wider">Testimonios</span>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-primary-foreground mt-3">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-primary-foreground mt-3">
             Lo que dicen nuestros <span className="text-gold">estudiantes</span>
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
           {testimonials.map((t, i) => (
             <motion.div
               key={t.name}

@@ -107,22 +107,22 @@ const FeaturedCourses = () => {
   }, []);
 
   return (
-    <section id="cursos" className="py-20 bg-muted/30">
-      <div className="container mx-auto px-4 lg:px-8">
+    <section id="cursos" className="py-12 sm:py-20 bg-muted/30">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-10 sm:mb-14"
         >
           <span className="text-sm font-semibold text-secondary uppercase tracking-wider">Cursos Destacados</span>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mt-3">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mt-3">
             Aprende de los <span className="text-secondary">mejores expertos</span>
           </h2>
         </motion.div>
 
         {loading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="rounded-2xl bg-card border border-border animate-pulse">
                 <div className="h-44 bg-muted rounded-t-2xl" />
@@ -140,7 +140,7 @@ const FeaturedCourses = () => {
             <p className="text-muted-foreground">Próximamente habrá cursos disponibles</p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {courses.map((course, i) => (
               <motion.div
                 key={course.id}

@@ -3,11 +3,11 @@ import logo from "@/assets/logo.png";
 
 const Footer = () => {
   return (
-    <footer className="bg-navy-dark border-t border-navy-light/20 py-12">
-      <div className="container mx-auto px-4 lg:px-8">
-        <div className="grid md:grid-cols-4 gap-8 mb-10">
+    <footer className="bg-navy-dark border-t border-navy-light/20 py-10 sm:py-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-8 sm:mb-10">
           {/* Brand */}
-          <div className="md:col-span-1">
+          <div className="col-span-2 sm:col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center mb-4">
               <img src={logo} alt="FinanzasMaster" className="h-10 w-auto brightness-0 invert" />
             </Link>

@@ -67,22 +67,22 @@ const CategoriesSection = () => {
   }, []);
 
   return (
-    <section id="categorias" className="py-20 bg-background">
-      <div className="container mx-auto px-4 lg:px-8">
+    <section id="categorias" className="py-12 sm:py-20 bg-background">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-10 sm:mb-14"
         >
           <span className="text-sm font-semibold text-secondary uppercase tracking-wider">Explora por Categoría</span>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mt-3">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mt-3">
             Encuentra tu camino hacia la{" "}
             <span className="text-secondary">libertad financiera</span>
           </h2>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {categories.map((cat, i) => {
             const Icon = iconMap[cat.icon || ""] || BookOpen;
             const description = cat.description || categoryDescriptions[cat.slug] || "Explora cursos en esta categoría";
