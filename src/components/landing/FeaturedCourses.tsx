@@ -148,8 +148,8 @@ const FeaturedCourses = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="group rounded-2xl overflow-hidden bg-card border border-border hover:shadow-xl hover:shadow-secondary/5 transition-all duration-300"
               >
+              <Link to={`/courses/${course.id}`} className="block group rounded-2xl overflow-hidden bg-card border border-border hover:shadow-xl hover:shadow-secondary/5 transition-all duration-300">
                 {/* Image */}
                 <div className="relative h-44 overflow-hidden bg-muted">
                   {course.image_url ? (
@@ -204,6 +204,7 @@ const FeaturedCourses = () => {
                     </span>
                   </div>
                 </div>
+              </Link>
               </motion.div>
             ))}
           </div>
