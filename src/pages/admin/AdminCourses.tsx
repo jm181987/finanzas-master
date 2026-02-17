@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Star, StarOff, Plus, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle, XCircle, Star, StarOff, Plus, Pencil, Trash2, LayoutList } from "lucide-react";
 
 interface CourseRow {
   id: string;
@@ -89,6 +90,7 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 };
 
 const AdminCourses = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [courses, setCourses] = useState<CourseRow[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -270,6 +272,9 @@ const AdminCourses = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/courses/${course.id}/content`)} title="Gestionar contenido">
+                          <LayoutList className="h-4 w-4 text-muted-foreground" />
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => openEdit(course)} title="Editar">
                           <Pencil className="h-4 w-4 text-muted-foreground" />
                         </Button>
