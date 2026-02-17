@@ -33,8 +33,7 @@ const FeaturedCourses = () => {
           .select(`
             id, title, short_description, image_url, is_free, price,
             average_rating, total_students, is_featured, author_id,
-            categories(name),
-            profiles!courses_author_id_fkey(full_name)
+            categories(name)
           `)
           .eq("is_published", true)
           .eq("status", "approved")
@@ -42,6 +41,19 @@ const FeaturedCourses = () => {
           .limit(8);
 
         if (error) throw error;
+
+        // Fetch author names separately
+        const authorIds = [...new Set((data || []).map((c) => c.author_id))];
+        let authorMap: Record<string, string> = {};
+        if (authorIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", authorIds);
+          for (const p of profiles || []) {
+            authorMap[p.id] = p.full_name || "Instructor";
+          }
+        }
 
         // Fetch lesson counts per course via modules
         const courseIds = (data || []).map((c) => c.id);
@@ -79,7 +91,7 @@ const FeaturedCourses = () => {
             average_rating: c.average_rating || 0,
             total_students: c.total_students || 0,
             is_featured: c.is_featured,
-            author_name: c.profiles?.full_name || "Instructor",
+            author_name: authorMap[c.author_id] || "Instructor",
             category_name: c.categories?.name || "General",
             lesson_count: lessonCounts[c.id] || 0,
           }))
