@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,8 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +40,8 @@ const Register = () => {
       toast.error(error.message);
     } else {
       toast.success("¡Cuenta creada! Revisa tu email para verificar tu cuenta.");
-      navigate("/login");
+      // After signup redirect to login preserving the redirect param
+      navigate(`/login${searchParams.get("redirect") ? `?redirect=${searchParams.get("redirect")}` : ""}`);
     }
     setIsLoading(false);
   };
@@ -155,7 +158,10 @@ const Register = () => {
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             ¿Ya tienes cuenta?{" "}
-            <Link to="/login" className="text-gold font-medium hover:underline">
+            <Link
+              to={`/login${searchParams.get("redirect") ? `?redirect=${searchParams.get("redirect")}` : ""}`}
+              className="text-gold font-medium hover:underline"
+            >
               Inicia sesión
             </Link>
           </p>
