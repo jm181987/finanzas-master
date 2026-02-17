@@ -1,16 +1,69 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, PiggyBank, CreditCard, BookOpen, Wrench, Brain } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const categories = [
-  { icon: TrendingUp, name: "Inversiones", description: "Aprende a invertir en bolsa, criptomonedas y bienes raíces", count: 24 },
-  { icon: PiggyBank, name: "Ahorro Inteligente", description: "Estrategias probadas para maximizar tu ahorro", count: 18 },
-  { icon: CreditCard, name: "Créditos", description: "Maneja tus deudas y usa el crédito a tu favor", count: 15 },
-  { icon: BookOpen, name: "Educación Financiera", description: "Fundamentos para una vida financiera saludable", count: 32 },
-  { icon: Wrench, name: "Herramientas", description: "Excel, apps y herramientas para gestionar tu dinero", count: 12 },
-  { icon: Brain, name: "Mentalidad del Dinero", description: "Psicología financiera y hábitos de riqueza", count: 20 },
-];
+const iconMap: Record<string, React.ElementType> = {
+  TrendingUp, PiggyBank, CreditCard, GraduationCap: BookOpen, Wrench, Brain,
+};
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon: string | null;
+  course_count: number;
+}
+
+const categoryDescriptions: Record<string, string> = {
+  inversiones: "Aprende a invertir en bolsa, criptomonedas y bienes raíces",
+  ahorro: "Estrategias probadas para maximizar tu ahorro mensual",
+  creditos: "Maneja tus deudas y usa el crédito a tu favor",
+  "educacion-financiera": "Fundamentos para una vida financiera saludable",
+  herramientas: "Apps y herramientas para gestionar tu dinero",
+  "mentalidad-del-dinero": "Psicología financiera y hábitos de riqueza",
+};
 
 const CategoriesSection = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data: cats } = await supabase
+          .from("categories")
+          .select("id, name, slug, description, icon")
+          .order("name");
+
+        if (!cats) return;
+
+        // Count approved published courses per category
+        const { data: courses } = await supabase
+          .from("courses")
+          .select("category_id")
+          .eq("is_published", true)
+          .eq("status", "approved");
+
+        const countMap: Record<string, number> = {};
+        for (const c of courses || []) {
+          if (c.category_id) countMap[c.category_id] = (countMap[c.category_id] || 0) + 1;
+        }
+
+        setCategories(
+          cats.map((cat) => ({
+            ...cat,
+            course_count: countMap[cat.id] || 0,
+          }))
+        );
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   return (
     <section id="categorias" className="py-20 bg-background">
       <div className="container mx-auto px-4 lg:px-8">
@@ -20,31 +73,37 @@ const CategoriesSection = () => {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <span className="text-sm font-semibold text-gold uppercase tracking-wider">Explora por Categoría</span>
+          <span className="text-sm font-semibold text-secondary uppercase tracking-wider">Explora por Categoría</span>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mt-3">
             Encuentra tu camino hacia la{" "}
-            <span className="text-gold">libertad financiera</span>
+            <span className="text-secondary">libertad financiera</span>
           </h2>
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((cat, i) => (
-            <motion.div
-              key={cat.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group p-6 rounded-2xl border border-border bg-card hover:border-gold/40 hover:shadow-lg hover:shadow-gold/5 transition-all duration-300 cursor-pointer"
-            >
-              <div className="h-12 w-12 rounded-xl bg-gold/10 flex items-center justify-center mb-4 group-hover:bg-gold/20 transition-colors">
-                <cat.icon className="h-6 w-6 text-gold" />
-              </div>
-              <h3 className="text-lg font-semibold text-card-foreground mb-2">{cat.name}</h3>
-              <p className="text-sm text-muted-foreground mb-3">{cat.description}</p>
-              <span className="text-xs font-medium text-gold">{cat.count} cursos</span>
-            </motion.div>
-          ))}
+          {categories.map((cat, i) => {
+            const Icon = iconMap[cat.icon || ""] || BookOpen;
+            const description = cat.description || categoryDescriptions[cat.slug] || "Explora cursos en esta categoría";
+            return (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="group p-6 rounded-2xl border border-border bg-card hover:border-secondary/40 hover:shadow-lg hover:shadow-secondary/5 transition-all duration-300 cursor-pointer"
+              >
+                <div className="h-12 w-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
+                  <Icon className="h-6 w-6 text-secondary" />
+                </div>
+                <h3 className="text-lg font-semibold text-card-foreground mb-2">{cat.name}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{description}</p>
+                <span className="text-xs font-medium text-secondary">
+                  {cat.course_count} {cat.course_count === 1 ? "curso" : "cursos"}
+                </span>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
