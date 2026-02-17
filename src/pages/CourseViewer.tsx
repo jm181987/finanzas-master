@@ -173,16 +173,22 @@ const CourseViewer = () => {
         if (enrollment?.completed_at) {
           setCourseCompleted(true);
         } else {
-          // If all lessons are already done but enrollment not marked, trigger completion now
+          // If all lessons are already done but enrollment not marked, fix via edge function
           const totalLessons = builtModules.flatMap((m) => m.lessons).length;
           if (completed.size >= totalLessons && totalLessons > 0) {
-            await supabase
-              .from("enrollments")
-              .update({ completed_at: new Date().toISOString() })
-              .eq("course_id", id!)
-              .eq("user_id", user!.id);
+            const { data: { session } } = await supabase.auth.getSession();
+            await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/complete-course`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${session?.access_token}`,
+                },
+                body: JSON.stringify({ course_id: id }),
+              }
+            );
             setCourseCompleted(true);
-            setShowCompletionModal(true);
           }
         }
       }
@@ -224,13 +230,22 @@ const CourseViewer = () => {
     if (!user || courseCompleted || totalLessons === 0) return;
     if (newCompletedIds.size < totalLessons) return;
     try {
-      const { error } = await supabase
-        .from("enrollments")
-        .update({ completed_at: new Date().toISOString() })
-        .eq("course_id", id!)
-        .eq("user_id", user.id);
-      if (error) {
-        console.error("Error marking course complete:", error);
+      // Use edge function to bypass RLS — users cannot UPDATE enrollments directly
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/complete-course`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ course_id: id }),
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Error marking course complete:", err);
         return;
       }
       setCourseCompleted(true);
