@@ -105,7 +105,7 @@ const CourseViewer = () => {
         author_name: profile?.full_name || "Instructor",
       });
 
-      // Check enrollment
+      // Check enrollment — auto-enroll if course is free
       let isEnrolled = false;
       if (user) {
         const { data: enrollment } = await supabase
@@ -115,6 +115,15 @@ const CourseViewer = () => {
           .eq("user_id", user.id)
           .maybeSingle();
         isEnrolled = !!enrollment;
+
+        // Auto-enroll for free courses
+        if (!isEnrolled && courseData.is_free) {
+          const { error: enrollErr } = await supabase
+            .from("enrollments")
+            .insert({ user_id: user.id, course_id: id! });
+          if (!enrollErr) isEnrolled = true;
+        }
+
         setEnrolled(isEnrolled);
       }
 
@@ -153,7 +162,7 @@ const CourseViewer = () => {
       setModules(builtModules);
       setExpandedModules(new Set((mods || []).map((m) => m.id)));
 
-      // Check if already completed
+      // Check if already completed (enrollment has completed_at set)
       if (isEnrolled) {
         const { data: enrollment } = await supabase
           .from("enrollments")
@@ -161,7 +170,21 @@ const CourseViewer = () => {
           .eq("course_id", id!)
           .eq("user_id", user!.id)
           .maybeSingle();
-        if (enrollment?.completed_at) setCourseCompleted(true);
+        if (enrollment?.completed_at) {
+          setCourseCompleted(true);
+        } else {
+          // If all lessons are already done but enrollment not marked, trigger completion now
+          const totalLessons = builtModules.flatMap((m) => m.lessons).length;
+          if (completed.size >= totalLessons && totalLessons > 0) {
+            await supabase
+              .from("enrollments")
+              .update({ completed_at: new Date().toISOString() })
+              .eq("course_id", id!)
+              .eq("user_id", user!.id);
+            setCourseCompleted(true);
+            setShowCompletionModal(true);
+          }
+        }
       }
 
       // Set first accessible lesson as active
@@ -197,22 +220,25 @@ const CourseViewer = () => {
     }
   };
 
-  const checkCourseCompletion = useCallback(async (newCompletedIds: Set<string>, allLessonsCount: number) => {
-    if (!user || !enrolled || courseCompleted) return;
-    if (newCompletedIds.size < allLessonsCount || allLessonsCount === 0) return;
-    // All lessons completed — mark enrollment as done
+  const checkCourseCompletion = useCallback(async (newCompletedIds: Set<string>, totalLessons: number) => {
+    if (!user || courseCompleted || totalLessons === 0) return;
+    if (newCompletedIds.size < totalLessons) return;
     try {
-      await supabase
+      const { error } = await supabase
         .from("enrollments")
         .update({ completed_at: new Date().toISOString() })
         .eq("course_id", id!)
         .eq("user_id", user.id);
+      if (error) {
+        console.error("Error marking course complete:", error);
+        return;
+      }
       setCourseCompleted(true);
       setShowCompletionModal(true);
     } catch (err) {
       console.error("Error marking course complete:", err);
     }
-  }, [user, enrolled, courseCompleted, id]);
+  }, [user, courseCompleted, id]);
 
   const markCompleted = useCallback(async (lessonId: string, currentModules: Module[]) => {
     if (!user) return;
@@ -244,7 +270,7 @@ const CourseViewer = () => {
           ),
         }))
       );
-      // Check if course is now fully completed
+      // Check completion against total lesson count from currentModules arg (avoids stale state)
       const totalLessons = currentModules.flatMap((m) => m.lessons).length;
       await checkCourseCompletion(newIds, totalLessons);
     } catch (err) {
