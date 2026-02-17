@@ -103,10 +103,25 @@ const AdminUsers = () => {
     setModalOpen(true);
   };
 
-  const openEdit = (user: UserWithRole) => {
+  const openEdit = async (user: UserWithRole) => {
     setEditingUser(user);
     setForm({ fullName: user.full_name || "", email: "", password: "", role: user.role, bio: user.bio || "" });
     setModalOpen(true);
+    // Fetch current email
+    if (session) {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-users`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ action: "get-user", userId: user.id }),
+          }
+        );
+        const data = await res.json();
+        if (data.email) setForm((f) => ({ ...f, email: data.email }));
+      } catch (_) {}
+    }
   };
 
   const handleSave = async () => {
@@ -268,12 +283,13 @@ const AdminUsers = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label>{editingUser ? "Nuevo email (opcional)" : "Email *"}</Label>
+              <Label>{editingUser ? "Email (editable)" : "Email *"}</Label>
               <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="correo@ejemplo.com" />
+              {editingUser && <p className="text-xs text-muted-foreground">El email actual se carga automáticamente. Modifícalo si deseas cambiarlo.</p>}
             </div>
 
             <div className="space-y-1.5">
-              <Label>{editingUser ? "Nueva contraseña (opcional)" : "Contraseña *"}</Label>
+              <Label>{editingUser ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña *"}</Label>
               <Input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder="••••••••" />
             </div>
 

@@ -40,6 +40,16 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, userId, email, password, fullName, role, bio } = body;
 
+    // GET USER (email)
+    if (action === "get-user") {
+      if (!userId) return new Response(JSON.stringify({ error: "userId requerido" }), { status: 400, headers: corsHeaders });
+      const { data: userData, error: getUserErr } = await adminClient.auth.admin.getUserById(userId);
+      if (getUserErr) return new Response(JSON.stringify({ error: getUserErr.message }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ ok: true, email: userData.user.email }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // CREATE USER
     if (action === "create") {
       if (!email || !password || !fullName) {
