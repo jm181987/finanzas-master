@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut, LayoutDashboard, Shield, KeyRound, ChevronDown } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/logo.png";
@@ -13,12 +13,15 @@ const Navbar = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isLanding = location.pathname === "/";
 
   const navLinks = [
-    { label: "Inicio", href: "#hero" },
-    { label: "Cursos", href: "#cursos" },
-    { label: "Categorías", href: "#categorias" },
-    { label: "Testimonios", href: "#testimonios" },
+    { label: "Inicio", href: isLanding ? "#hero" : "/#hero" },
+    { label: "Cursos", href: isLanding ? "#cursos" : "/#cursos" },
+    { label: "Categorías", href: isLanding ? "#categorias" : "/#categorias" },
+    { label: "Testimonios", href: isLanding ? "#testimonios" : "/#testimonios" },
   ];
 
   const handleSignOut = async () => {
