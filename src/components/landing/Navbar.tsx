@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
 
   const navLinks = [
@@ -46,6 +46,13 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
+                {role === "admin" && (
+                  <Link to="/admin">
+                    <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-navy-light/50 gap-2">
+                      <Shield className="h-4 w-4" /> Admin
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/dashboard">
                   <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-navy-light/50 gap-2">
                     <LayoutDashboard className="h-4 w-4" /> Mi Panel
@@ -106,6 +113,13 @@ const Navbar = () => {
               <div className="flex flex-col gap-2 pt-3 border-t border-navy-light/30">
                 {user ? (
                   <>
+                    {role === "admin" && (
+                      <Link to="/admin" onClick={() => setIsOpen(false)}>
+                        <Button variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold gap-2">
+                          <Shield className="h-4 w-4" /> Admin
+                        </Button>
+                      </Link>
+                    )}
                     <Link to="/dashboard" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold gap-2">
                         <LayoutDashboard className="h-4 w-4" /> Mi Panel
