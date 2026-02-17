@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const CTASection = () => {
+  const { user } = useAuth();
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4 lg:px-8">
@@ -32,9 +34,9 @@ const CTASection = () => {
             </p>
 
             <div className="flex justify-center">
-              <Link to="/register">
+              <Link to={user ? "/courses" : "/register"}>
                 <Button size="lg" className="bg-gold text-navy-dark hover:bg-gold-dark font-semibold text-base px-8 gap-2">
-                  Crear Cuenta Gratis <ArrowRight className="h-5 w-5" />
+                  {user ? "Ver catálogo de cursos" : "Crear Cuenta Gratis"} <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
             </div>
