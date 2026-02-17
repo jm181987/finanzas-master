@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, CheckCircle2, Circle, Lock,
-  Play, FileText, File, BookOpen, Menu, X, LogIn
+  Play, FileText, File, BookOpen, Menu, X, LogIn, Trophy, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +69,8 @@ const CourseViewer = () => {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [courseCompleted, setCourseCompleted] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   useEffect(() => {
     if (id) fetchCourse();
@@ -151,6 +153,17 @@ const CourseViewer = () => {
       setModules(builtModules);
       setExpandedModules(new Set((mods || []).map((m) => m.id)));
 
+      // Check if already completed
+      if (isEnrolled) {
+        const { data: enrollment } = await supabase
+          .from("enrollments")
+          .select("completed_at")
+          .eq("course_id", id!)
+          .eq("user_id", user!.id)
+          .maybeSingle();
+        if (enrollment?.completed_at) setCourseCompleted(true);
+      }
+
       // Set first accessible lesson as active
       const firstLesson = builtModules.flatMap((m) => m.lessons).find((l) =>
         isEnrolled || courseData.is_free || l.is_free_preview
@@ -184,9 +197,25 @@ const CourseViewer = () => {
     }
   };
 
-  const markCompleted = async (lessonId: string) => {
+  const checkCourseCompletion = useCallback(async (newCompletedIds: Set<string>, allLessonsCount: number) => {
+    if (!user || !enrolled || courseCompleted) return;
+    if (newCompletedIds.size < allLessonsCount || allLessonsCount === 0) return;
+    // All lessons completed — mark enrollment as done
+    try {
+      await supabase
+        .from("enrollments")
+        .update({ completed_at: new Date().toISOString() })
+        .eq("course_id", id!)
+        .eq("user_id", user.id);
+      setCourseCompleted(true);
+      setShowCompletionModal(true);
+    } catch (err) {
+      console.error("Error marking course complete:", err);
+    }
+  }, [user, enrolled, courseCompleted, id]);
+
+  const markCompleted = useCallback(async (lessonId: string, currentModules: Module[]) => {
     if (!user) return;
-    // Allow tracking for enrolled users OR free courses they have access to
     const canTrack = enrolled || course?.is_free;
     if (!canTrack) return;
     if (completedIds.has(lessonId)) return;
@@ -205,7 +234,8 @@ const CourseViewer = () => {
         toast({ title: "Error al guardar progreso", description: error.message, variant: "destructive" });
         return;
       }
-      setCompletedIds((prev) => new Set([...prev, lessonId]));
+      const newIds = new Set([...completedIds, lessonId]);
+      setCompletedIds(newIds);
       setModules((prev) =>
         prev.map((mod) => ({
           ...mod,
@@ -214,10 +244,13 @@ const CourseViewer = () => {
           ),
         }))
       );
+      // Check if course is now fully completed
+      const totalLessons = currentModules.flatMap((m) => m.lessons).length;
+      await checkCourseCompletion(newIds, totalLessons);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [user, enrolled, course, completedIds, checkCourseCompletion, toast]);
 
   const selectLesson = (lesson: Lesson) => {
     const canAccess = enrolled || course?.is_free || lesson.is_free_preview;
@@ -226,8 +259,7 @@ const CourseViewer = () => {
       return;
     }
     setActiveLesson(lesson);
-    // Auto-mark completed when opening a lesson (for enrolled or free courses)
-    if (user && (enrolled || course?.is_free)) markCompleted(lesson.id);
+    if (user && (enrolled || course?.is_free)) markCompleted(lesson.id, modules);
   };
 
   const allLessons = modules.flatMap((m) => m.lessons);
@@ -443,7 +475,7 @@ const CourseViewer = () => {
                     size="sm"
                     variant="outline"
                     className="border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 shrink-0"
-                    onClick={() => markCompleted(activeLesson.id)}
+                    onClick={() => markCompleted(activeLesson.id, modules)}
                   >
                     <CheckCircle2 className="h-4 w-4 mr-1.5" />
                     Marcar completa
@@ -482,7 +514,7 @@ const CourseViewer = () => {
                 <Button
                   disabled={!nextLesson}
                   onClick={() => {
-                    if (user && (enrolled || course?.is_free) && !completedIds.has(activeLesson.id)) markCompleted(activeLesson.id);
+                    if (user && (enrolled || course?.is_free) && !completedIds.has(activeLesson.id)) markCompleted(activeLesson.id, modules);
                     if (nextLesson) selectLesson(nextLesson);
                   }}
                   className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
@@ -503,7 +535,7 @@ const CourseViewer = () => {
         </main>
       </div>
 
-      {/* Mobile: enroll CTA if not enrolled */}
+      {/* Mobile enroll CTA */}
       {!enrolled && !course.is_free && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
           <Button className="w-full bg-secondary text-secondary-foreground" onClick={handleEnroll} disabled={enrolling}>
@@ -511,6 +543,106 @@ const CourseViewer = () => {
           </Button>
         </div>
       )}
+
+      {/* 🎉 Course Completion Modal */}
+      <AnimatePresence>
+        {showCompletionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setShowCompletionModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 20 }}
+              transition={{ type: "spring", bounce: 0.4 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card border border-border rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative overflow-hidden"
+            >
+              {/* Decorative background glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 via-transparent to-primary/10 pointer-events-none" />
+
+              {/* Trophy animation */}
+              <motion.div
+                initial={{ scale: 0, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.2, type: "spring", bounce: 0.6 }}
+                className="w-24 h-24 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-6"
+              >
+                <Trophy className="h-12 w-12 text-secondary" />
+              </motion.div>
+
+              {/* Stars */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className="flex justify-center gap-1 mb-4"
+              >
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4 + i * 0.08, type: "spring", bounce: 0.5 }}
+                  >
+                    <Star className="h-5 w-5 text-secondary fill-current" />
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              <motion.h2
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-2xl font-display font-bold text-foreground mb-2"
+              >
+                ¡Felicidades! 🎉
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="text-muted-foreground mb-2"
+              >
+                Completaste el curso
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.65 }}
+                className="font-semibold text-foreground mb-6"
+              >
+                {course.title}
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.75 }}
+                className="flex flex-col sm:flex-row gap-3"
+              >
+                <Button
+                  className="flex-1 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                  onClick={() => { setShowCompletionModal(false); navigate("/dashboard"); }}
+                >
+                  Ver mi panel
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowCompletionModal(false)}
+                >
+                  Seguir revisando
+                </Button>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
