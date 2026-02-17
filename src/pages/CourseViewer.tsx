@@ -121,7 +121,14 @@ const CourseViewer = () => {
           const { error: enrollErr } = await supabase
             .from("enrollments")
             .insert({ user_id: user.id, course_id: id! });
-          if (!enrollErr) isEnrolled = true;
+          if (!enrollErr) {
+            isEnrolled = true;
+            // Sync total_students count in background
+            fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-stats`, {
+              method: "POST",
+              headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+            }).catch(() => null);
+          }
         }
 
         setEnrolled(isEnrolled);
