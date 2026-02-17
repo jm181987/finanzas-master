@@ -31,15 +31,12 @@ const CTASection = () => {
               Únete a miles de estudiantes que ya están transformando su futuro financiero con nuestros cursos.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex justify-center">
               <Link to="/register">
                 <Button size="lg" className="bg-gold text-navy-dark hover:bg-gold-dark font-semibold text-base px-8 gap-2">
                   Crear Cuenta Gratis <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-primary-foreground/20 text-primary-foreground hover:bg-navy-light/50">
-                Explorar Cursos
-              </Button>
             </div>
           </div>
         </motion.div>
