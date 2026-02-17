@@ -214,20 +214,20 @@ const AdminCourses = () => {
   const toggleFeatured = (id: string, current: boolean) => updateCourse(id, { is_featured: !current });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-foreground mb-1">Gestión de Cursos</h2>
-          <p className="text-muted-foreground">Crea, aprueba, rechaza y destaca cursos</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Gestión de Cursos</h2>
+          <p className="text-muted-foreground text-sm">Crea, aprueba, rechaza y destaca cursos</p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" /> Nuevo Curso
         </Button>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="font-sans text-lg">Todos los Cursos ({courses.length})</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="font-sans text-base sm:text-lg">Todos los Cursos ({courses.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -237,73 +237,124 @@ const AdminCourses = () => {
               ))}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Autor</TableHead>
-                  <TableHead>Precio</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Dest.</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {courses.map((course) => (
-                  <TableRow key={course.id}>
-                    <TableCell className="font-medium max-w-[200px] truncate">{course.title}</TableCell>
-                    <TableCell className="text-muted-foreground">{course.author_name}</TableCell>
-                    <TableCell>
-                      {course.is_free ? (
-                        <Badge variant="secondary">Gratis</Badge>
-                      ) : (
-                        <span className="font-medium">${Number(course.price).toFixed(2)}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant[course.status]}>{statusLabels[course.status]}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" onClick={() => toggleFeatured(course.id, course.is_featured)}>
-                        {course.is_featured
-                          ? <Star className="h-4 w-4 fill-secondary text-secondary" />
-                          : <StarOff className="h-4 w-4 text-muted-foreground" />}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
+            <>
+              {/* Desktop table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Autor</TableHead>
+                      <TableHead>Precio</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Dest.</TableHead>
+                      <TableHead>Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {courses.map((course) => (
+                      <TableRow key={course.id}>
+                        <TableCell className="font-medium max-w-[200px] truncate">{course.title}</TableCell>
+                        <TableCell className="text-muted-foreground">{course.author_name}</TableCell>
+                        <TableCell>
+                          {course.is_free ? (
+                            <Badge variant="secondary">Gratis</Badge>
+                          ) : (
+                            <span className="font-medium">${Number(course.price).toFixed(2)}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={statusVariant[course.status]}>{statusLabels[course.status]}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon" onClick={() => toggleFeatured(course.id, course.is_featured)}>
+                            {course.is_featured
+                              ? <Star className="h-4 w-4 fill-secondary text-secondary" />
+                              : <StarOff className="h-4 w-4 text-muted-foreground" />}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/courses/${course.id}/content`)} title="Gestionar contenido">
+                              <LayoutList className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(course)} title="Editar">
+                              <Pencil className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                            {course.status !== "approved" && (
+                              <Button variant="ghost" size="icon" onClick={() => approve(course.id)} title="Aprobar" className="text-primary hover:text-primary/80">
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {course.status !== "rejected" && (
+                              <Button variant="ghost" size="icon" onClick={() => reject(course.id)} title="Rechazar" className="text-destructive hover:text-destructive">
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" onClick={() => deleteCourse(course.id)} title="Eliminar" className="text-destructive hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {courses.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          No hay cursos registrados
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="sm:hidden space-y-3">
+                {courses.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8 text-sm">No hay cursos registrados</p>
+                ) : courses.map((course) => (
+                  <div key={course.id} className="border border-border rounded-xl p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground text-sm line-clamp-2">{course.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">por {course.author_name}</p>
+                      </div>
+                      <Badge variant={statusVariant[course.status]} className="shrink-0 text-xs">{statusLabels[course.status]}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">
+                        {course.is_free ? <Badge variant="secondary">Gratis</Badge> : <span className="font-medium">${Number(course.price).toFixed(2)}</span>}
+                      </span>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/courses/${course.id}/content`)} title="Gestionar contenido">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleFeatured(course.id, course.is_featured)}>
+                          {course.is_featured ? <Star className="h-4 w-4 fill-secondary text-secondary" /> : <StarOff className="h-4 w-4 text-muted-foreground" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/courses/${course.id}/content`)}>
                           <LayoutList className="h-4 w-4 text-muted-foreground" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(course)} title="Editar">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(course)}>
                           <Pencil className="h-4 w-4 text-muted-foreground" />
                         </Button>
                         {course.status !== "approved" && (
-                          <Button variant="ghost" size="icon" onClick={() => approve(course.id)} title="Aprobar" className="text-primary hover:text-primary/80">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => approve(course.id)}>
                             <CheckCircle className="h-4 w-4" />
                           </Button>
                         )}
                         {course.status !== "rejected" && (
-                          <Button variant="ghost" size="icon" onClick={() => reject(course.id)} title="Rechazar" className="text-destructive hover:text-destructive">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => reject(course.id)}>
                             <XCircle className="h-4 w-4" />
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" onClick={() => deleteCourse(course.id)} title="Eliminar" className="text-destructive hover:text-destructive">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteCourse(course.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </div>
                 ))}
-                {courses.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      No hay cursos registrados
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
