@@ -17,12 +17,14 @@ const Navbar = () => {
 
   const isLanding = location.pathname === "/";
 
-  const navLinks = [
-    { label: "Inicio", href: isLanding ? "#hero" : "/#hero" },
-    { label: "Cursos", href: isLanding ? "#cursos" : "/#cursos" },
-    { label: "Categorías", href: isLanding ? "#categorias" : "/#categorias" },
-    { label: "Testimonios", href: isLanding ? "#testimonios" : "/#testimonios" },
-  ];
+  const navLinks = isLanding
+    ? [
+        { label: "Inicio", href: "#hero" },
+        { label: "Cursos", href: "#cursos" },
+        { label: "Categorías", href: "#categorias" },
+        { label: "Testimonios", href: "#testimonios" },
+      ]
+    : [{ label: "Inicio", href: "/" }];
 
   const handleSignOut = async () => {
     await signOut();
