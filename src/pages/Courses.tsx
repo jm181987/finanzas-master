@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Search, BookOpen, Star, Users, Clock, Play, SlidersHorizontal, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, BookOpen, Star, Users, Clock, Play, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,12 +40,12 @@ const Courses = () => {
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Sync URL params → state
   useEffect(() => {
     const cat = searchParams.get("category") || "";
     const q = searchParams.get("search") || "";
@@ -56,14 +56,12 @@ const Courses = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch categories
       const { data: cats } = await supabase
         .from("categories")
         .select("id, name, slug")
         .order("name");
       setCategories(cats || []);
 
-      // Fetch all published approved courses
       const { data, error } = await supabase
         .from("courses")
         .select("id, title, short_description, image_url, is_free, price, average_rating, total_students, is_featured, author_id, category_id, categories(name)")
@@ -73,7 +71,6 @@ const Courses = () => {
 
       if (error) throw error;
 
-      // Author names
       const authorIds = [...new Set((data || []).map((c) => c.author_id))];
       let authorMap: Record<string, string> = {};
       if (authorIds.length > 0) {
@@ -81,7 +78,6 @@ const Courses = () => {
         for (const p of profiles || []) authorMap[p.id] = p.full_name || "Instructor";
       }
 
-      // Lesson counts
       const courseIds = (data || []).map((c) => c.id);
       let lessonCounts: Record<string, number> = {};
       if (courseIds.length > 0) {
@@ -156,93 +152,129 @@ const Courses = () => {
   const selectedCategoryName = categories.find((c) => c.id === selectedCategory)?.name;
   const hasFilters = !!selectedCategory || !!search || priceFilter !== "all";
 
+  const FilterContent = () => (
+    <div className="space-y-6">
+      {/* Search */}
+      <div>
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Buscar</label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Buscar cursos..."
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      {/* Price */}
+      <div>
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Precio</label>
+        <div className="flex flex-col gap-1.5">
+          {(["all", "free", "paid"] as const).map((opt) => (
+            <button
+              key={opt}
+              onClick={() => setPriceFilter(opt)}
+              className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${priceFilter === opt ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+            >
+              {opt === "all" ? "Todos" : opt === "free" ? "Gratis" : "De pago"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div>
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Categoría</label>
+        <div className="flex flex-col gap-1.5">
+          <button
+            onClick={() => handleCategoryClick("")}
+            className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${!selectedCategory ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+          >
+            Todas
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => handleCategoryClick(cat.id)}
+              className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCategory === cat.id ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {hasFilters && (
+        <button onClick={clearFilters} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <X className="h-3.5 w-3.5" /> Limpiar filtros
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      <main className="flex-1 pt-24 pb-16">
-        <div className="container mx-auto px-4 lg:px-8">
+      <main className="flex-1 pt-20 sm:pt-24 pb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="mb-10">
+          <div className="mb-6 sm:mb-10">
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <span className="text-sm font-semibold text-secondary uppercase tracking-wider">Catálogo</span>
-              <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mt-2 mb-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mt-2 mb-2">
                 Todos los <span className="text-secondary">cursos</span>
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm sm:text-base">
                 {loading ? "Cargando..." : `${filtered.length} curso${filtered.length !== 1 ? "s" : ""} disponible${filtered.length !== 1 ? "s" : ""}`}
                 {selectedCategoryName && <span> en <strong>{selectedCategoryName}</strong></span>}
               </p>
             </motion.div>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar filters */}
-            <aside className="lg:w-60 shrink-0">
-              <div className="sticky top-24 space-y-6">
-                {/* Search */}
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Buscar</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={search}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                      placeholder="Buscar cursos..."
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
+          {/* Mobile filter toggle */}
+          <div className="lg:hidden mb-4">
+            <button
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground w-full justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4 text-secondary" />
+                Filtros
+                {hasFilters && <span className="h-2 w-2 rounded-full bg-secondary" />}
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
+            </button>
 
-                {/* Price */}
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Precio</label>
-                  <div className="flex flex-col gap-1.5">
-                    {(["all", "free", "paid"] as const).map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => setPriceFilter(opt)}
-                        className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${priceFilter === opt ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
-                      >
-                        {opt === "all" ? "Todos" : opt === "free" ? "Gratis" : "De pago"}
-                      </button>
-                    ))}
+            <AnimatePresence>
+              {filtersOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-3 p-4 rounded-xl border border-border bg-card">
+                    <FilterContent />
                   </div>
-                </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-                {/* Categories */}
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Categoría</label>
-                  <div className="flex flex-col gap-1.5">
-                    <button
-                      onClick={() => handleCategoryClick("")}
-                      className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${!selectedCategory ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
-                    >
-                      Todas
-                    </button>
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => handleCategoryClick(cat.id)}
-                        className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCategory === cat.id ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {hasFilters && (
-                  <button onClick={clearFilters} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    <X className="h-3.5 w-3.5" /> Limpiar filtros
-                  </button>
-                )}
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+            {/* Sidebar — desktop only */}
+            <aside className="hidden lg:block lg:w-60 shrink-0">
+              <div className="sticky top-24">
+                <FilterContent />
               </div>
             </aside>
 
             {/* Grid */}
             <div className="flex-1">
               {loading ? (
-                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                   {[...Array(6)].map((_, i) => (
                     <div key={i} className="rounded-2xl bg-card border border-border animate-pulse">
                       <div className="h-44 bg-muted rounded-t-2xl" />
@@ -255,7 +287,7 @@ const Courses = () => {
                   ))}
                 </div>
               ) : filtered.length === 0 ? (
-                <div className="text-center py-24 text-muted-foreground">
+                <div className="text-center py-16 sm:py-24 text-muted-foreground">
                   <SlidersHorizontal className="h-12 w-12 mx-auto mb-4 opacity-30" />
                   <p className="text-lg font-medium text-foreground">No se encontraron cursos</p>
                   <p className="text-sm mt-1">Prueba con otros filtros</p>
@@ -264,7 +296,7 @@ const Courses = () => {
                   )}
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                   {filtered.map((course, i) => (
                     <motion.div
                       key={course.id}
@@ -276,7 +308,7 @@ const Courses = () => {
                         to={`/courses/${course.id}`}
                         className="block group rounded-2xl overflow-hidden bg-card border border-border hover:shadow-xl hover:shadow-secondary/5 transition-all duration-300"
                       >
-                        <div className="relative h-44 overflow-hidden bg-muted">
+                        <div className="relative h-40 sm:h-44 overflow-hidden bg-muted">
                           {course.image_url ? (
                             <img src={course.image_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                           ) : (
@@ -302,9 +334,9 @@ const Courses = () => {
                           </div>
                         </div>
 
-                        <div className="p-5">
+                        <div className="p-4 sm:p-5">
                           <span className="text-xs font-medium text-secondary">{course.category_name}</span>
-                          <h3 className="text-base font-semibold text-card-foreground mt-1 mb-2 line-clamp-2">{course.title}</h3>
+                          <h3 className="text-sm sm:text-base font-semibold text-card-foreground mt-1 mb-2 line-clamp-2">{course.title}</h3>
                           <p className="text-sm text-muted-foreground mb-3">por {course.author_name}</p>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
@@ -312,7 +344,7 @@ const Courses = () => {
                               {course.average_rating > 0 ? course.average_rating.toFixed(1) : "Nuevo"}
                             </span>
                             <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{course.total_students.toLocaleString()}</span>
-                            <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{course.lesson_count} lecciones</span>
+                            <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{course.lesson_count} lec.</span>
                           </div>
                         </div>
                       </Link>
