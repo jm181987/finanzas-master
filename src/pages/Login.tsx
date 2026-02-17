@@ -3,9 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap, Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import logo from "@/assets/logo.png";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -37,11 +38,8 @@ const Login = () => {
       {/* Left - Form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          <Link to="/" className="flex items-center gap-2 mb-8">
-            <GraduationCap className="h-8 w-8 text-gold" />
-            <span className="text-xl font-display font-bold text-foreground">
-              Finanzas<span className="text-gold">Master</span>
-            </span>
+          <Link to="/" className="flex items-center mb-8">
+            <img src={logo} alt="FinanzasMaster" className="h-12 w-auto" />
           </Link>
 
           <h1 className="text-3xl font-display font-bold text-foreground mb-2">
@@ -112,7 +110,7 @@ const Login = () => {
       {/* Right - Decorative */}
       <div className="hidden lg:flex flex-1 bg-navy items-center justify-center p-12">
         <div className="max-w-md text-center">
-          <GraduationCap className="h-16 w-16 text-gold mx-auto mb-6" />
+          <img src={logo} alt="FinanzasMaster" className="h-20 w-auto mx-auto mb-6 brightness-0 invert" />
           <h2 className="text-3xl font-display font-bold text-primary-foreground mb-4">
             Tu futuro financiero <span className="text-gold">comienza aquí</span>
           </h2>
