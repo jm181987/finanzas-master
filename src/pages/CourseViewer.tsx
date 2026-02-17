@@ -185,15 +185,26 @@ const CourseViewer = () => {
   };
 
   const markCompleted = async (lessonId: string) => {
-    if (!user || !enrolled) return;
+    if (!user) return;
+    // Allow tracking for enrolled users OR free courses they have access to
+    const canTrack = enrolled || course?.is_free;
+    if (!canTrack) return;
     if (completedIds.has(lessonId)) return;
     try {
-      await supabase.from("lesson_progress").upsert({
-        user_id: user.id,
-        lesson_id: lessonId,
-        completed: true,
-        completed_at: new Date().toISOString(),
-      });
+      const { error } = await supabase.from("lesson_progress").upsert(
+        {
+          user_id: user.id,
+          lesson_id: lessonId,
+          completed: true,
+          completed_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,lesson_id" }
+      );
+      if (error) {
+        console.error("Error marking lesson complete:", error);
+        toast({ title: "Error al guardar progreso", description: error.message, variant: "destructive" });
+        return;
+      }
       setCompletedIds((prev) => new Set([...prev, lessonId]));
       setModules((prev) =>
         prev.map((mod) => ({
@@ -215,7 +226,8 @@ const CourseViewer = () => {
       return;
     }
     setActiveLesson(lesson);
-    if (enrolled) markCompleted(lesson.id);
+    // Auto-mark completed when opening a lesson (for enrolled or free courses)
+    if (user && (enrolled || course?.is_free)) markCompleted(lesson.id);
   };
 
   const allLessons = modules.flatMap((m) => m.lessons);
@@ -426,7 +438,7 @@ const CourseViewer = () => {
                     <p className="text-sm text-muted-foreground mt-1">{activeLesson.duration_minutes} min de lectura</p>
                   )}
                 </div>
-                {enrolled && !completedIds.has(activeLesson.id) && (
+                {user && (enrolled || course?.is_free) && !completedIds.has(activeLesson.id) && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -470,7 +482,7 @@ const CourseViewer = () => {
                 <Button
                   disabled={!nextLesson}
                   onClick={() => {
-                    if (enrolled && !completedIds.has(activeLesson.id)) markCompleted(activeLesson.id);
+                    if (user && (enrolled || course?.is_free) && !completedIds.has(activeLesson.id)) markCompleted(activeLesson.id);
                     if (nextLesson) selectLesson(nextLesson);
                   }}
                   className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
