@@ -1,6 +1,7 @@
 import { LayoutDashboard, Users, BookOpen, Tag, ArrowLeft } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Sidebar,
   SidebarContent,
@@ -14,17 +15,18 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
-const menuItems = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Usuarios", url: "/admin/users", icon: Users },
-  { title: "Cursos", url: "/admin/courses", icon: BookOpen },
-  { title: "Categorías", url: "/admin/categories", icon: Tag },
-];
-
 export function AdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const menuItems = [
+    { title: t("admin_nav_dashboard"), url: "/admin", icon: LayoutDashboard },
+    { title: t("admin_nav_users"), url: "/admin/users", icon: Users },
+    { title: t("admin_nav_courses"), url: "/admin/courses", icon: BookOpen },
+    { title: t("admin_nav_categories"), url: "/admin/categories", icon: Tag },
+  ];
 
   return (
     <Sidebar collapsible="icon">
@@ -37,16 +39,16 @@ export function AdminSidebar() {
             onClick={() => navigate("/")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            {!collapsed && <span>Volver al sitio</span>}
+            {!collapsed && <span>{t("admin_back_to_site")}</span>}
           </Button>
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Administración</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("admin_section_label")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}

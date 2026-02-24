@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, BookOpen, DollarSign, GraduationCap } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Metrics {
   totalUsers: number;
@@ -11,6 +12,7 @@ interface Metrics {
 }
 
 const AdminDashboard = () => {
+  const { t } = useLanguage();
   const [metrics, setMetrics] = useState<Metrics>({
     totalUsers: 0,
     totalCourses: 0,
@@ -51,10 +53,10 @@ const AdminDashboard = () => {
   }, []);
 
   const cards = [
-    { label: "Usuarios Totales", value: metrics.totalUsers, icon: Users, color: "text-blue-500" },
-    { label: "Cursos Publicados", value: metrics.totalCourses, icon: BookOpen, color: "text-emerald-500" },
-    { label: "Inscripciones", value: metrics.totalEnrollments, icon: GraduationCap, color: "text-purple-500" },
-    { label: "Ingresos Totales", value: `$${metrics.totalRevenue.toFixed(2)}`, icon: DollarSign, color: "text-secondary" },
+    { label: t("admin_dash_total_users"), value: metrics.totalUsers, icon: Users, color: "text-blue-500" },
+    { label: t("admin_dash_published_courses"), value: metrics.totalCourses, icon: BookOpen, color: "text-emerald-500" },
+    { label: t("admin_dash_enrollments"), value: metrics.totalEnrollments, icon: GraduationCap, color: "text-purple-500" },
+    { label: t("admin_dash_total_revenue"), value: `$${metrics.totalRevenue.toFixed(2)}`, icon: DollarSign, color: "text-secondary" },
   ];
 
   if (loading) {
@@ -73,8 +75,8 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6 sm:space-y-8">
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Dashboard</h2>
-        <p className="text-muted-foreground text-sm sm:text-base">Resumen general de la plataforma</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">{t("admin_dash_title")}</h2>
+        <p className="text-muted-foreground text-sm sm:text-base">{t("admin_dash_subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
