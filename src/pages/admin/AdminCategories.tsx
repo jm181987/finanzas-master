@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Category {
   id: string;
@@ -16,6 +17,7 @@ interface Category {
 }
 
 const AdminCategories = () => {
+  const { t } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
@@ -24,30 +26,25 @@ const AdminCategories = () => {
 
   const fetchCategories = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .order("name");
+    const { data, error } = await supabase.from("categories").select("*").order("name");
     if (error) {
-      toast.error("Error al cargar categorías");
+      toast.error(t("admin_cat_load_error"));
     } else {
       setCategories(data || []);
     }
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  useEffect(() => { fetchCategories(); }, []);
 
   const addCategory = async () => {
     if (!newName.trim()) return;
     const slug = newName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     const { error } = await supabase.from("categories").insert({ name: newName.trim(), slug });
     if (error) {
-      toast.error("Error al crear categoría");
+      toast.error(t("admin_cat_create_error"));
     } else {
-      toast.success("Categoría creada");
+      toast.success(t("admin_cat_created"));
       setNewName("");
       fetchCategories();
     }
@@ -58,9 +55,9 @@ const AdminCategories = () => {
     const slug = editName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     const { error } = await supabase.from("categories").update({ name: editName.trim(), slug }).eq("id", id);
     if (error) {
-      toast.error("Error al actualizar categoría");
+      toast.error(t("admin_cat_update_error"));
     } else {
-      toast.success("Categoría actualizada");
+      toast.success(t("admin_cat_updated"));
       setEditingId(null);
       fetchCategories();
     }
@@ -69,9 +66,9 @@ const AdminCategories = () => {
   const deleteCategory = async (id: string) => {
     const { error } = await supabase.from("categories").delete().eq("id", id);
     if (error) {
-      toast.error("Error al eliminar categoría");
+      toast.error(t("admin_cat_delete_error"));
     } else {
-      toast.success("Categoría eliminada");
+      toast.success(t("admin_cat_deleted"));
       setCategories((prev) => prev.filter((c) => c.id !== id));
     }
   };
@@ -79,25 +76,25 @@ const AdminCategories = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground mb-1">Gestión de Categorías</h2>
-        <p className="text-muted-foreground">Crea, edita y elimina categorías de cursos</p>
+        <h2 className="text-2xl font-bold text-foreground mb-1">{t("admin_cat_title")}</h2>
+        <p className="text-muted-foreground">{t("admin_cat_subtitle")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-sans text-lg">Agregar Categoría</CardTitle>
+          <CardTitle className="font-sans text-lg">{t("admin_cat_add_title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-3">
             <Input
-              placeholder="Nombre de la categoría"
+              placeholder={t("admin_cat_placeholder")}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addCategory()}
               className="max-w-sm"
             />
             <Button onClick={addCategory} disabled={!newName.trim()}>
-              <Plus className="h-4 w-4 mr-2" /> Agregar
+              <Plus className="h-4 w-4 mr-2" /> {t("admin_cat_add_btn")}
             </Button>
           </div>
         </CardContent>
@@ -105,7 +102,7 @@ const AdminCategories = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-sans text-lg">Categorías ({categories.length})</CardTitle>
+          <CardTitle className="font-sans text-lg">{t("admin_cat_list_title")} ({categories.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -118,9 +115,9 @@ const AdminCategories = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead className="w-[120px]">Acciones</TableHead>
+                  <TableHead>{t("admin_cat_col_name")}</TableHead>
+                  <TableHead>{t("admin_cat_col_slug")}</TableHead>
+                  <TableHead className="w-[120px]">{t("admin_cat_col_actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -153,22 +150,10 @@ const AdminCategories = () => {
                           </>
                         ) : (
                           <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setEditingId(cat.id);
-                                setEditName(cat.name);
-                              }}
-                            >
+                            <Button variant="ghost" size="icon" onClick={() => { setEditingId(cat.id); setEditName(cat.name); }}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteCategory(cat.id)}
-                              className="text-destructive hover:text-destructive"
-                            >
+                            <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)} className="text-destructive hover:text-destructive">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </>

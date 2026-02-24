@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, role, loading } = useAuth();
+  const { t } = useLanguage();
 
   if (loading) {
     return (
@@ -28,7 +30,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <main className="flex-1 flex flex-col">
           <header className="h-14 border-b border-border flex items-center px-4 bg-card">
             <SidebarTrigger className="mr-4" />
-            <h1 className="text-lg font-semibold text-foreground font-sans">Panel de Administración</h1>
+            <h1 className="text-lg font-semibold text-foreground font-sans">{t("admin_panel_title")}</h1>
           </header>
           <div className="flex-1 p-6 bg-background overflow-auto">
             {children}
