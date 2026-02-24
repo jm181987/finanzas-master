@@ -9,28 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Course {
-  id: string;
-  title: string;
-  short_description: string | null;
-  image_url: string | null;
-  is_free: boolean;
-  price: number;
-  average_rating: number;
-  total_students: number;
-  is_featured: boolean;
-  author_name: string;
-  category_name: string;
-  category_id: string | null;
-  lesson_count: number;
+  id: string; title: string; short_description: string | null; image_url: string | null;
+  is_free: boolean; price: number; average_rating: number; total_students: number;
+  is_featured: boolean; author_name: string; category_name: string; category_id: string | null; lesson_count: number;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+interface Category { id: string; name: string; slug: string; }
 
 const Courses = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -41,34 +28,23 @@ const Courses = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const { t } = useLanguage();
 
+  useEffect(() => { fetchData(); }, []);
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const cat = searchParams.get("category") || "";
-    const q = searchParams.get("search") || "";
-    setSelectedCategory(cat);
-    setSearch(q);
+    setSelectedCategory(searchParams.get("category") || "");
+    setSearch(searchParams.get("search") || "");
   }, [searchParams]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: cats } = await supabase
-        .from("categories")
-        .select("id, name, slug")
-        .order("name");
+      const { data: cats } = await supabase.from("categories").select("id, name, slug").order("name");
       setCategories(cats || []);
 
-      const { data, error } = await supabase
-        .from("courses")
+      const { data, error } = await supabase.from("courses")
         .select("id, title, short_description, image_url, is_free, price, average_rating, total_students, is_featured, author_id, category_id, categories(name)")
-        .eq("is_published", true)
-        .eq("status", "approved")
-        .order("is_featured", { ascending: false });
-
+        .eq("is_published", true).eq("status", "approved").order("is_featured", { ascending: false });
       if (error) throw error;
 
       const authorIds = [...new Set((data || []).map((c) => c.author_id))];
@@ -93,28 +69,16 @@ const Courses = () => {
         }
       }
 
-      setCourses(
-        (data || []).map((c: any) => ({
-          id: c.id,
-          title: c.title,
-          short_description: c.short_description,
-          image_url: c.image_url,
-          is_free: c.is_free,
-          price: c.price,
-          average_rating: c.average_rating || 0,
-          total_students: c.total_students || 0,
-          is_featured: c.is_featured,
-          author_name: authorMap[c.author_id] || "Instructor",
-          category_name: c.categories?.name || "General",
-          category_id: c.category_id,
-          lesson_count: lessonCounts[c.id] || 0,
-        }))
-      );
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      setCourses((data || []).map((c: any) => ({
+        id: c.id, title: c.title, short_description: c.short_description,
+        image_url: c.image_url, is_free: c.is_free, price: c.price,
+        average_rating: c.average_rating || 0, total_students: c.total_students || 0,
+        is_featured: c.is_featured, author_name: authorMap[c.author_id] || "Instructor",
+        category_name: c.categories?.name || "General", category_id: c.category_id,
+        lesson_count: lessonCounts[c.id] || 0,
+      })));
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
   const updateParams = (cat: string, q: string) => {
@@ -130,15 +94,10 @@ const Courses = () => {
     updateParams(next, search);
   };
 
-  const handleSearchChange = (val: string) => {
-    setSearch(val);
-    updateParams(selectedCategory, val);
-  };
+  const handleSearchChange = (val: string) => { setSearch(val); updateParams(selectedCategory, val); };
 
   const clearFilters = () => {
-    setSelectedCategory("");
-    setSearch("");
-    setPriceFilter("all");
+    setSelectedCategory(""); setSearch(""); setPriceFilter("all");
     setSearchParams({}, { replace: true });
   };
 
@@ -154,50 +113,37 @@ const Courses = () => {
 
   const FilterContent = () => (
     <div className="space-y-6">
-      {/* Search */}
       <div>
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Buscar</label>
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">{t("courses_search")}</label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Buscar cursos..."
-            className="pl-9"
-          />
+          <Input value={search} onChange={(e) => handleSearchChange(e.target.value)} placeholder={t("courses_search_placeholder")} className="pl-9" />
         </div>
       </div>
 
-      {/* Price */}
       <div>
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Precio</label>
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">{t("courses_price")}</label>
         <div className="flex flex-col gap-1.5">
           {(["all", "free", "paid"] as const).map((opt) => (
-            <button
-              key={opt}
-              onClick={() => setPriceFilter(opt)}
+            <button key={opt} onClick={() => setPriceFilter(opt)}
               className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${priceFilter === opt ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
             >
-              {opt === "all" ? "Todos" : opt === "free" ? "Gratis" : "De pago"}
+              {opt === "all" ? t("courses_all_filter") : opt === "free" ? t("courses_free") : t("courses_paid")}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Categories */}
       <div>
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Categoría</label>
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">{t("courses_category")}</label>
         <div className="flex flex-col gap-1.5">
-          <button
-            onClick={() => handleCategoryClick("")}
+          <button onClick={() => handleCategoryClick("")}
             className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${!selectedCategory ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
           >
-            Todas
+            {t("courses_all_categories")}
           </button>
           {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => handleCategoryClick(cat.id)}
+            <button key={cat.id} onClick={() => handleCategoryClick(cat.id)}
               className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCategory === cat.id ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
             >
               {cat.name}
@@ -208,7 +154,7 @@ const Courses = () => {
 
       {hasFilters && (
         <button onClick={clearFilters} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <X className="h-3.5 w-3.5" /> Limpiar filtros
+          <X className="h-3.5 w-3.5" /> {t("courses_clear_filters")}
         </button>
       )}
     </div>
@@ -219,59 +165,44 @@ const Courses = () => {
       <Navbar />
       <main className="flex-1 pt-20 sm:pt-24 pb-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
           <div className="mb-6 sm:mb-10">
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <span className="text-sm font-semibold text-secondary uppercase tracking-wider">Catálogo</span>
+              <span className="text-sm font-semibold text-secondary uppercase tracking-wider">{t("courses_catalog")}</span>
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mt-2 mb-2">
-                Todos los <span className="text-secondary">cursos</span>
+                {t("courses_all")} <span className="text-secondary">{t("courses_title")}</span>
               </h1>
               <p className="text-muted-foreground text-sm sm:text-base">
-                {loading ? "Cargando..." : `${filtered.length} curso${filtered.length !== 1 ? "s" : ""} disponible${filtered.length !== 1 ? "s" : ""}`}
-                {selectedCategoryName && <span> en <strong>{selectedCategoryName}</strong></span>}
+                {loading ? t("courses_loading") : `${filtered.length} curso${filtered.length !== 1 ? "s" : ""} ${filtered.length !== 1 ? t("courses_available_p") : t("courses_available")}`}
+                {selectedCategoryName && <span> {t("courses_in")} <strong>{selectedCategoryName}</strong></span>}
               </p>
             </motion.div>
           </div>
 
-          {/* Mobile filter toggle */}
           <div className="lg:hidden mb-4">
-            <button
-              onClick={() => setFiltersOpen((v) => !v)}
+            <button onClick={() => setFiltersOpen((v) => !v)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground w-full justify-between"
             >
               <span className="flex items-center gap-2">
                 <SlidersHorizontal className="h-4 w-4 text-secondary" />
-                Filtros
+                {t("courses_filters")}
                 {hasFilters && <span className="h-2 w-2 rounded-full bg-secondary" />}
               </span>
               <ChevronDown className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
             </button>
-
             <AnimatePresence>
               {filtersOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-3 p-4 rounded-xl border border-border bg-card">
-                    <FilterContent />
-                  </div>
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="mt-3 p-4 rounded-xl border border-border bg-card"><FilterContent /></div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-            {/* Sidebar — desktop only */}
             <aside className="hidden lg:block lg:w-60 shrink-0">
-              <div className="sticky top-24">
-                <FilterContent />
-              </div>
+              <div className="sticky top-24"><FilterContent /></div>
             </aside>
 
-            {/* Grid */}
             <div className="flex-1">
               {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
@@ -289,23 +220,15 @@ const Courses = () => {
               ) : filtered.length === 0 ? (
                 <div className="text-center py-16 sm:py-24 text-muted-foreground">
                   <SlidersHorizontal className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p className="text-lg font-medium text-foreground">No se encontraron cursos</p>
-                  <p className="text-sm mt-1">Prueba con otros filtros</p>
-                  {hasFilters && (
-                    <Button variant="outline" className="mt-4" onClick={clearFilters}>Limpiar filtros</Button>
-                  )}
+                  <p className="text-lg font-medium text-foreground">{t("courses_no_results")}</p>
+                  <p className="text-sm mt-1">{t("courses_try_filters")}</p>
+                  {hasFilters && <Button variant="outline" className="mt-4" onClick={clearFilters}>{t("courses_clear_filters")}</Button>}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                   {filtered.map((course, i) => (
-                    <motion.div
-                      key={course.id}
-                      initial={{ opacity: 0, y: 16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                    >
-                      <Link
-                        to={`/courses/${course.id}`}
+                    <motion.div key={course.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                      <Link to={`/courses/${course.id}`}
                         className="block group rounded-2xl overflow-hidden bg-card border border-border hover:shadow-xl hover:shadow-secondary/5 transition-all duration-300"
                       >
                         <div className="relative h-40 sm:h-44 overflow-hidden bg-muted">
@@ -319,12 +242,12 @@ const Courses = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent" />
                           <div className="absolute top-3 left-3">
                             <Badge className={course.is_free ? "bg-emerald-500/90 text-white border-0" : "bg-secondary text-secondary-foreground border-0"}>
-                              {course.is_free ? "Gratis" : `$${Number(course.price).toFixed(2)}`}
+                              {course.is_free ? t("courses_free") : `$${Number(course.price).toFixed(2)}`}
                             </Badge>
                           </div>
                           {course.is_featured && (
                             <div className="absolute top-3 right-3">
-                              <Badge className="bg-secondary/90 text-secondary-foreground border-0 text-xs">⭐ Destacado</Badge>
+                              <Badge className="bg-secondary/90 text-secondary-foreground border-0 text-xs">⭐ {t("featured_star")}</Badge>
                             </div>
                           )}
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -337,14 +260,14 @@ const Courses = () => {
                         <div className="p-4 sm:p-5">
                           <span className="text-xs font-medium text-secondary">{course.category_name}</span>
                           <h3 className="text-sm sm:text-base font-semibold text-card-foreground mt-1 mb-2 line-clamp-2">{course.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-3">por {course.author_name}</p>
+                          <p className="text-sm text-muted-foreground mb-3">{t("featured_by")} {course.author_name}</p>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Star className="h-3.5 w-3.5 text-secondary fill-current" />
-                              {course.average_rating > 0 ? course.average_rating.toFixed(1) : "Nuevo"}
+                              {course.average_rating > 0 ? course.average_rating.toFixed(1) : t("featured_new")}
                             </span>
                             <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{course.total_students.toLocaleString()}</span>
-                            <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{course.lesson_count} lec.</span>
+                            <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{course.lesson_count} {t("featured_lessons")}</span>
                           </div>
                         </div>
                       </Link>

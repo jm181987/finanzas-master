@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { BookOpen, TrendingUp, Award, CheckCircle2, Play, Trophy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -23,6 +24,7 @@ interface EnrolledCourse {
 
 const Dashboard = () => {
   const { user, role } = useAuth();
+  const { t } = useLanguage();
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,58 +34,34 @@ const Dashboard = () => {
 
   const fetchEnrollments = async () => {
     try {
-      // Get enrollments with course data
       const { data: enrollments } = await supabase
         .from("enrollments")
         .select("course_id, enrolled_at, completed_at, courses(id, title, image_url, is_free)")
         .eq("user_id", user!.id)
         .order("enrolled_at", { ascending: false });
 
-      if (!enrollments || enrollments.length === 0) {
-        setLoading(false);
-        return;
-      }
+      if (!enrollments || enrollments.length === 0) { setLoading(false); return; }
 
       const courseIds = enrollments.map((e) => e.course_id);
-
-      // Get modules for those courses
-      const { data: modules } = await supabase
-        .from("modules")
-        .select("id, course_id")
-        .in("course_id", courseIds);
-
+      const { data: modules } = await supabase.from("modules").select("id, course_id").in("course_id", courseIds);
       const moduleIds = (modules || []).map((m) => m.id);
       const moduleToCourse = new Map((modules || []).map((m) => [m.id, m.course_id]));
 
-      // Count total lessons per course
       const lessonCountMap: Record<string, number> = {};
       if (moduleIds.length > 0) {
-        const { data: lessons } = await supabase
-          .from("lessons")
-          .select("module_id")
-          .in("module_id", moduleIds);
+        const { data: lessons } = await supabase.from("lessons").select("module_id").in("module_id", moduleIds);
         for (const l of lessons || []) {
           const cid = moduleToCourse.get(l.module_id);
           if (cid) lessonCountMap[cid] = (lessonCountMap[cid] || 0) + 1;
         }
       }
 
-      // Get completed lessons for this user across those lessons
-      const { data: progress } = await supabase
-        .from("lesson_progress")
-        .select("lesson_id")
-        .eq("user_id", user!.id)
-        .eq("completed", true);
-
+      const { data: progress } = await supabase.from("lesson_progress").select("lesson_id").eq("user_id", user!.id).eq("completed", true);
       const completedLessonIds = new Set((progress || []).map((p) => p.lesson_id));
 
-      // Count completed lessons per course
       const completedMap: Record<string, number> = {};
       if (moduleIds.length > 0) {
-        const { data: allLessons } = await supabase
-          .from("lessons")
-          .select("id, module_id")
-          .in("module_id", moduleIds);
+        const { data: allLessons } = await supabase.from("lessons").select("id, module_id").in("module_id", moduleIds);
         for (const l of allLessons || []) {
           if (completedLessonIds.has(l.id)) {
             const cid = moduleToCourse.get(l.module_id);
@@ -96,12 +74,8 @@ const Dashboard = () => {
         enrollments.map((e) => {
           const c = e.courses as any;
           return {
-            id: c.id,
-            title: c.title,
-            image_url: c.image_url,
-            is_free: c.is_free,
-            enrolled_at: e.enrolled_at,
-            completed_at: e.completed_at,
+            id: c.id, title: c.title, image_url: c.image_url, is_free: c.is_free,
+            enrolled_at: e.enrolled_at, completed_at: e.completed_at,
             lesson_count: lessonCountMap[c.id] || 0,
             completed_lessons: completedMap[c.id] || 0,
           };
@@ -118,9 +92,9 @@ const Dashboard = () => {
   const inProgressCount = courses.filter((c) => !c.completed_at && c.completed_lessons > 0).length;
 
   const stats = [
-    { icon: BookOpen, label: "Cursos Inscritos", value: String(courses.length) },
-    { icon: TrendingUp, label: "En Progreso", value: String(inProgressCount) },
-    { icon: Award, label: "Completados", value: String(completedCount) },
+    { icon: BookOpen, label: t("dash_enrolled"), value: String(courses.length) },
+    { icon: TrendingUp, label: t("dash_in_progress"), value: String(inProgressCount) },
+    { icon: Award, label: t("dash_completed"), value: String(completedCount) },
   ];
 
   return (
@@ -130,23 +104,20 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="mb-8">
             <h1 className="text-3xl font-display font-bold text-foreground">
-              ¡Bienvenido, {user?.user_metadata?.full_name || "Estudiante"}!
+              {t("dash_welcome")} {user?.user_metadata?.full_name || t("dash_student")}!
             </h1>
             <p className="text-muted-foreground mt-1">
-              {role === "admin" && "👑 Administrador — "}
-              {role === "developer" && "🛠️ Desarrollador — "}
-              Tu panel de aprendizaje
+              {role === "admin" && `👑 ${t("dash_admin_badge")} — `}
+              {role === "developer" && `🛠️ ${t("dash_dev_badge")} — `}
+              {t("dash_learning_panel")}
             </p>
           </div>
 
-          {/* Stats */}
           <div className="grid sm:grid-cols-3 gap-6 mb-10">
             {stats.map((stat) => (
               <Card key={stat.label} className="border-border">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.label}
-                  </CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
                   <stat.icon className="h-5 w-5 text-secondary" />
                 </CardHeader>
                 <CardContent>
@@ -156,10 +127,9 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Courses list */}
           <Card className="border-border">
             <CardHeader>
-              <CardTitle className="font-display">Mis Cursos</CardTitle>
+              <CardTitle className="font-display">{t("dash_my_courses")}</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -177,29 +147,23 @@ const Dashboard = () => {
               ) : courses.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <BookOpen className="h-12 w-12 mx-auto mb-4 text-secondary/30" />
-                  <p className="text-lg font-medium">Aún no estás inscrito en ningún curso</p>
-                  <p className="text-sm mt-1 mb-6">Explora nuestro catálogo y comienza tu aprendizaje</p>
+                  <p className="text-lg font-medium">{t("dash_no_courses")}</p>
+                  <p className="text-sm mt-1 mb-6">{t("dash_explore_desc")}</p>
                   <Link to="/#cursos">
                     <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
-                      Explorar cursos
+                      {t("dash_explore_btn")}
                     </Button>
                   </Link>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {courses.map((course) => {
-                    const pct = course.lesson_count > 0
-                      ? Math.round((course.completed_lessons / course.lesson_count) * 100)
-                      : 0;
+                    const pct = course.lesson_count > 0 ? Math.round((course.completed_lessons / course.lesson_count) * 100) : 0;
                     const isDone = !!course.completed_at || (course.lesson_count > 0 && course.completed_lessons >= course.lesson_count);
-
                     return (
-                      <Link
-                        key={course.id}
-                        to={`/courses/${course.id}`}
+                      <Link key={course.id} to={`/courses/${course.id}`}
                         className="flex gap-4 p-4 rounded-xl border border-border hover:border-secondary/40 hover:bg-muted/30 transition-all duration-200 group"
                       >
-                        {/* Thumbnail */}
                         <div className="w-20 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
                           {course.image_url ? (
                             <img src={course.image_url} alt={course.title} className="w-full h-full object-cover" />
@@ -209,39 +173,29 @@ const Dashboard = () => {
                             </div>
                           )}
                         </div>
-
-                        {/* Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-1">
-                            <h3 className="font-semibold text-foreground text-sm line-clamp-1 group-hover:text-secondary transition-colors">
-                              {course.title}
-                            </h3>
+                            <h3 className="font-semibold text-foreground text-sm line-clamp-1 group-hover:text-secondary transition-colors">{course.title}</h3>
                             {isDone ? (
                               <Badge className="bg-emerald-500/10 text-emerald-600 border-0 shrink-0 text-xs flex items-center gap-1">
-                                <Trophy className="h-3 w-3" /> Completado
+                                <Trophy className="h-3 w-3" /> {t("dash_completed_badge")}
                               </Badge>
                             ) : (
                               <Badge variant="outline" className="shrink-0 text-xs flex items-center gap-1 border-secondary/30 text-secondary">
-                                <Play className="h-3 w-3" /> En progreso
+                                <Play className="h-3 w-3" /> {t("dash_in_progress_badge")}
                               </Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mb-2">
-                            {course.completed_lessons} de {course.lesson_count} lecciones completadas
+                            {course.completed_lessons} {t("dash_lessons_of")} {course.lesson_count} {t("dash_lessons_completed")}
                           </p>
                           <div className="flex items-center gap-2">
                             <Progress value={pct} className="h-1.5 flex-1" />
                             <span className="text-xs text-muted-foreground shrink-0">{pct}%</span>
                           </div>
                         </div>
-
-                        {/* Arrow */}
                         <div className="flex items-center text-muted-foreground group-hover:text-secondary transition-colors shrink-0">
-                          {isDone ? (
-                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                          ) : (
-                            <Play className="h-5 w-5" />
-                          )}
+                          {isDone ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> : <Play className="h-5 w-5" />}
                         </div>
                       </Link>
                     );
