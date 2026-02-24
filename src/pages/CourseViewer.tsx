@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Course {
   id: string;
@@ -59,7 +60,7 @@ const CourseViewer = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-
+  const { t } = useLanguage();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [enrolled, setEnrolled] = useState(false);
@@ -224,7 +225,7 @@ const CourseViewer = () => {
         .insert({ user_id: user.id, course_id: id! });
       if (error) throw error;
       setEnrolled(true);
-      toast({ title: "¡Inscripción exitosa!", description: "Ya tienes acceso a todo el contenido." });
+      toast({ title: t("cv_enroll_success"), description: t("cv_enroll_success_desc") });
       // Sync total_students in background
       fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-stats`, {
         method: "POST",
@@ -308,7 +309,7 @@ const CourseViewer = () => {
   const selectLesson = (lesson: Lesson) => {
     const canAccess = enrolled || course?.is_free || lesson.is_free_preview;
     if (!canAccess) {
-      toast({ title: "Contenido bloqueado", description: "Inscríbete para acceder a esta lección.", variant: "destructive" });
+      toast({ title: t("cv_locked"), description: t("cv_locked_desc"), variant: "destructive" });
       return;
     }
     setActiveLesson(lesson);
@@ -328,7 +329,7 @@ const CourseViewer = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm">Cargando curso...</p>
+          <p className="text-muted-foreground text-sm">{t("cv_loading")}</p>
         </div>
       </div>
     );
@@ -343,7 +344,7 @@ const CourseViewer = () => {
         <header className="border-b border-border px-6 py-4 flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <ChevronLeft className="h-5 w-5" />
-            <span className="text-sm">Inicio</span>
+            <span className="text-sm">{t("cv_home")}</span>
           </Link>
         </header>
         <div className="max-w-4xl mx-auto px-6 py-16 text-center">
@@ -353,25 +354,25 @@ const CourseViewer = () => {
           <Badge className="mb-4 bg-secondary/10 text-secondary border-0">{course.is_free ? "Gratis" : `$${Number(course.price).toFixed(2)}`}</Badge>
           <h1 className="text-3xl font-display font-bold text-foreground mb-4">{course.title}</h1>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">{course.description}</p>
-          <p className="text-sm text-muted-foreground mb-6">Instructor: <span className="font-medium text-foreground">{course.author_name}</span></p>
+          <p className="text-sm text-muted-foreground mb-6">{t("cv_instructor")}: <span className="font-medium text-foreground">{course.author_name}</span></p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {user ? (
               <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90" onClick={handleEnroll} disabled={enrolling}>
-                {enrolling ? "Inscribiendo..." : `Inscribirme${!course.is_free ? ` — $${Number(course.price).toFixed(2)}` : ""}`}
+                {enrolling ? t("cv_enrolling") : `${t("cv_enroll")}${!course.is_free ? ` — $${Number(course.price).toFixed(2)}` : ""}`}
               </Button>
             ) : (
               <Button size="lg" className="bg-secondary text-secondary-foreground hover:bg-secondary/90" onClick={() => navigate("/login", { state: { from: `/courses/${id}` } })}>
                 <LogIn className="h-4 w-4 mr-2" />
-                Iniciar sesión para inscribirme
+                {t("cv_login_enroll")}
               </Button>
             )}
-            <Button size="lg" variant="outline" onClick={() => navigate("/")}>Volver al inicio</Button>
+            <Button size="lg" variant="outline" onClick={() => navigate("/")}>{t("cv_back_home")}</Button>
           </div>
 
           {/* Preview lessons */}
           <div className="mt-12 text-left">
-            <h2 className="text-xl font-semibold text-foreground mb-6">Contenido del curso</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-6">{t("cv_course_content")}</h2>
             {modules.map((mod) => (
               <div key={mod.id} className="mb-6">
                 <h3 className="text-base font-medium text-foreground mb-3 flex items-center gap-2">
@@ -403,13 +404,13 @@ const CourseViewer = () => {
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
         <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm">
-          <ChevronLeft className="h-4 w-4" /> Inicio
+          <ChevronLeft className="h-4 w-4" /> {t("cv_home")}
         </Link>
         <span className="text-muted-foreground">·</span>
         <h1 className="font-semibold text-foreground text-sm line-clamp-1 flex-1">{course.title}</h1>
         {enrolled && (
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-muted-foreground hidden sm:block">{progressPct}% completado</span>
+            <span className="text-xs text-muted-foreground hidden sm:block">{progressPct}% {t("cv_completed_pct")}</span>
             <div className="w-24 hidden sm:block">
               <Progress value={progressPct} className="h-1.5" />
             </div>
@@ -425,8 +426,8 @@ const CourseViewer = () => {
               {enrolled && (
                 <div className="mb-4 p-3 rounded-xl bg-secondary/10">
                   <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>Progreso</span>
-                    <span>{completedCount}/{allLessons.length} lecciones</span>
+                    <span>{t("cv_progress")}</span>
+                    <span>{completedCount}/{allLessons.length} {t("cv_lessons")}</span>
                   </div>
                   <Progress value={progressPct} className="h-2" />
                 </div>
@@ -520,7 +521,7 @@ const CourseViewer = () => {
                 <div>
                   <h2 className="text-2xl font-display font-bold text-foreground">{activeLesson.title}</h2>
                   {activeLesson.duration_minutes && (
-                    <p className="text-sm text-muted-foreground mt-1">{activeLesson.duration_minutes} min de lectura</p>
+                    <p className="text-sm text-muted-foreground mt-1">{activeLesson.duration_minutes} {t("cv_reading_min")}</p>
                   )}
                 </div>
                 {user && (enrolled || course?.is_free) && !completedIds.has(activeLesson.id) && (
@@ -531,12 +532,12 @@ const CourseViewer = () => {
                     onClick={() => markCompleted(activeLesson.id, modules)}
                   >
                     <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                    Marcar completa
+                    {t("cv_mark_complete")}
                   </Button>
                 )}
                 {completedIds.has(activeLesson.id) && (
                   <Badge className="bg-emerald-500/10 text-emerald-600 border-0 shrink-0">
-                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Completada
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> {t("cv_completed_label")}
                   </Badge>
                 )}
               </div>
@@ -557,7 +558,7 @@ const CourseViewer = () => {
                   className="flex items-center gap-2"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  <span className="hidden sm:block">Anterior</span>
+                  <span className="hidden sm:block">{t("cv_prev")}</span>
                 </Button>
 
                 <span className="text-xs text-muted-foreground">
@@ -572,7 +573,7 @@ const CourseViewer = () => {
                   }}
                   className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
                 >
-                  <span className="hidden sm:block">Siguiente</span>
+                  <span className="hidden sm:block">{t("cv_next")}</span>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -581,7 +582,7 @@ const CourseViewer = () => {
             <div className="flex items-center justify-center h-full">
               <div className="text-center p-12">
                 <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Selecciona una lección para comenzar</p>
+                <p className="text-muted-foreground">{t("cv_select_lesson")}</p>
               </div>
             </div>
           )}
@@ -592,7 +593,7 @@ const CourseViewer = () => {
       {!enrolled && !course.is_free && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
           <Button className="w-full bg-secondary text-secondary-foreground" onClick={handleEnroll} disabled={enrolling}>
-            {enrolling ? "Inscribiendo..." : "Inscribirme al curso"}
+            {enrolling ? t("cv_enrolling") : t("cv_enroll_mobile")}
           </Button>
         </div>
       )}
@@ -653,7 +654,7 @@ const CourseViewer = () => {
                 transition={{ delay: 0.5 }}
                 className="text-2xl font-display font-bold text-foreground mb-2"
               >
-                ¡Felicidades! 🎉
+                {t("cv_congrats")}
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0 }}
@@ -661,7 +662,7 @@ const CourseViewer = () => {
                 transition={{ delay: 0.6 }}
                 className="text-muted-foreground mb-2"
               >
-                Completaste el curso
+                {t("cv_course_done")}
               </motion.p>
               <motion.p
                 initial={{ opacity: 0 }}
@@ -682,14 +683,14 @@ const CourseViewer = () => {
                   className="flex-1 bg-secondary text-secondary-foreground hover:bg-secondary/90"
                   onClick={() => { setShowCompletionModal(false); navigate("/dashboard"); }}
                 >
-                  Ver mi panel
+                  {t("cv_view_panel")}
                 </Button>
                 <Button
                   variant="outline"
                   className="flex-1"
                   onClick={() => setShowCompletionModal(false)}
                 >
-                  Seguir revisando
+                  {t("cv_keep_reviewing")}
                 </Button>
               </motion.div>
             </motion.div>
