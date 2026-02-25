@@ -48,7 +48,7 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const LangButton = ({ className = "" }: { className?: string }) => (
+  const langButtonContent = (className: string) => (
     <button
       onClick={toggleLang}
       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${className}`}
@@ -66,7 +66,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-16 lg:h-20">
             <Link to="/" className="flex items-center">
               <div className="relative flex items-center">
-                <div className="absolute inset-0 rounded-full blur-xl opacity-60" style={{ background: "radial-gradient(ellipse, hsl(var(--gold)) 0%, transparent 70%)", transform: "scale(1.8)" }} />
+                <div className="absolute inset-0 rounded-full blur-xl opacity-60 pointer-events-none" style={{ background: "radial-gradient(ellipse, hsl(var(--gold)) 0%, transparent 70%)", transform: "scale(1.8)" }} />
                 <img src={logo} alt="FinanzasMaster" className="relative h-10 lg:h-12 w-auto drop-shadow-[0_0_12px_hsl(var(--gold)/0.8)]" />
               </div>
             </Link>
@@ -80,7 +80,7 @@ const Navbar = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              <LangButton className="text-primary-foreground/70 hover:text-gold hover:bg-navy-light/50" />
+              {langButtonContent("text-primary-foreground/70 hover:text-gold hover:bg-navy-light/50")}
 
               {user ? (
                 <>
@@ -131,7 +131,7 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center gap-2 md:hidden">
-              <LangButton className="text-primary-foreground/70 hover:text-gold" />
+              {langButtonContent("text-primary-foreground/70 hover:text-gold")}
               <button className="text-primary-foreground" onClick={() => setIsOpen(!isOpen)}>
                 {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
