@@ -201,8 +201,10 @@ const CourseViewer = () => {
           setCourseCompleted(true);
         } else {
           // If all lessons are already done but enrollment not marked, fix via edge function
-          const totalLessons = builtModules.flatMap((m) => m.lessons).length;
-          if (completed.size >= totalLessons && totalLessons > 0) {
+          const allCourseLessons = builtModules.flatMap((m) => m.lessons);
+          const totalLessons = allCourseLessons.length;
+          const completedInCourse = allCourseLessons.filter((l) => completed.has(l.id)).length;
+          if (completedInCourse >= totalLessons && totalLessons > 0) {
             const { data: { session } } = await supabase.auth.getSession();
             await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/complete-course`,
