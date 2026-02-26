@@ -10,9 +10,10 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { localized } from "@/lib/localized";
 
 interface Course {
-  id: string; title: string; short_description: string | null; image_url: string | null;
+  id: string; title: string; title_pt: string | null; short_description: string | null; short_description_pt: string | null; image_url: string | null;
   is_free: boolean; price: number; average_rating: number; total_students: number;
   is_featured: boolean; author_name: string; category_name: string; category_id: string | null; lesson_count: number;
 }
@@ -28,7 +29,7 @@ const Courses = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   useEffect(() => { fetchData(); }, []);
   useEffect(() => {
@@ -46,15 +47,16 @@ const Courses = () => {
         .select("id, title, short_description, image_url, is_free, price, average_rating, total_students, is_featured, author_id, category_id, categories(name)")
         .eq("is_published", true).eq("status", "approved").order("is_featured", { ascending: false });
       if (error) throw error;
+      const rawRows = data as any[];
 
-      const authorIds = [...new Set((data || []).map((c) => c.author_id))];
+      const authorIds = [...new Set(rawRows.map((c: any) => c.author_id))];
       let authorMap: Record<string, string> = {};
       if (authorIds.length > 0) {
         const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", authorIds);
         for (const p of profiles || []) authorMap[p.id] = p.full_name || "Instructor";
       }
 
-      const courseIds = (data || []).map((c) => c.id);
+      const courseIds = rawRows.map((c: any) => c.id);
       let lessonCounts: Record<string, number> = {};
       if (courseIds.length > 0) {
         const { data: modules } = await supabase.from("modules").select("id, course_id").in("course_id", courseIds);
@@ -69,8 +71,8 @@ const Courses = () => {
         }
       }
 
-      setCourses((data || []).map((c: any) => ({
-        id: c.id, title: c.title, short_description: c.short_description,
+      setCourses(rawRows.map((c: any) => ({
+        id: c.id, title: c.title, title_pt: c.title_pt || null, short_description: c.short_description, short_description_pt: c.short_description_pt || null,
         image_url: c.image_url, is_free: c.is_free, price: c.price,
         average_rating: c.average_rating || 0, total_students: c.total_students || 0,
         is_featured: c.is_featured, author_name: authorMap[c.author_id] || "Instructor",
@@ -103,7 +105,9 @@ const Courses = () => {
 
   const filtered = courses.filter((c) => {
     const matchCat = !selectedCategory || c.category_id === selectedCategory;
-    const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase()) || (c.short_description || "").toLowerCase().includes(search.toLowerCase());
+    const displayTitle = localized(c, "title", lang);
+    const displayDesc = localized(c, "short_description", lang);
+    const matchSearch = !search || displayTitle.toLowerCase().includes(search.toLowerCase()) || displayDesc.toLowerCase().includes(search.toLowerCase());
     const matchPrice = priceFilter === "all" || (priceFilter === "free" && c.is_free) || (priceFilter === "paid" && !c.is_free);
     return matchCat && matchSearch && matchPrice;
   });
@@ -259,7 +263,7 @@ const Courses = () => {
 
                         <div className="p-4 sm:p-5">
                           <span className="text-xs font-medium text-secondary">{course.category_name}</span>
-                          <h3 className="text-sm sm:text-base font-semibold text-card-foreground mt-1 mb-2 line-clamp-2">{course.title}</h3>
+                          <h3 className="text-sm sm:text-base font-semibold text-card-foreground mt-1 mb-2 line-clamp-2">{localized(course, "title", lang)}</h3>
                           <p className="text-sm text-muted-foreground mb-3">{t("featured_by")} {course.author_name}</p>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
