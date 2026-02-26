@@ -17,11 +17,17 @@ Deno.serve(async (req) => {
     }
 
     // Get the user from their JWT
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
+      return new Response(JSON.stringify({ error: "Missing server configuration" }), { status: 500, headers: corsHeaders });
+    }
+
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
@@ -34,10 +40,7 @@ Deno.serve(async (req) => {
     }
 
     // Use admin client to bypass RLS for this trusted operation
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify that all lessons are actually completed before marking course as done
     const { data: modules } = await adminClient
