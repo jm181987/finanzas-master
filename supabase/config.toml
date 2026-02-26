@@ -2,3 +2,6 @@ project_id = "tnjcigqqmwahnxcsljgk"
 
 [functions.complete-course]
 verify_jwt = false
+
+[functions.translate-course]
+verify_jwt = false

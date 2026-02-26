@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Star, StarOff, Plus, Pencil, Trash2, LayoutList } from "lucide-react";
+import { CheckCircle, XCircle, Star, StarOff, Plus, Pencil, Trash2, LayoutList, Languages, Loader2 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 interface CourseRow {
@@ -52,6 +52,24 @@ const AdminCourses = () => {
   const [editingCourse, setEditingCourse] = useState<CourseRow | null>(null);
   const [form, setForm] = useState<CourseForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [translatingId, setTranslatingId] = useState<string | null>(null);
+
+  const translateCourse = async (courseId: string) => {
+    setTranslatingId(courseId);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-course", {
+        body: { course_id: courseId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(t("admin_courses_translated") || "Curso traducido al portugués exitosamente");
+    } catch (err: unknown) {
+      console.error(err);
+      toast.error(t("admin_courses_translate_error") || "Error al traducir el curso");
+    } finally {
+      setTranslatingId(null);
+    }
+  };
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -185,6 +203,9 @@ const AdminCourses = () => {
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/courses/${course.id}/content`)}><LayoutList className="h-4 w-4 text-muted-foreground" /></Button>
                             <Button variant="ghost" size="icon" onClick={() => openEdit(course)}><Pencil className="h-4 w-4 text-muted-foreground" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => translateCourse(course.id)} disabled={translatingId === course.id} title={t("admin_courses_translate")}>
+                              {translatingId === course.id ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <Languages className="h-4 w-4 text-muted-foreground" />}
+                            </Button>
                             {course.status !== "approved" && <Button variant="ghost" size="icon" onClick={() => approve(course.id)} className="text-primary hover:text-primary/80"><CheckCircle className="h-4 w-4" /></Button>}
                             {course.status !== "rejected" && <Button variant="ghost" size="icon" onClick={() => reject(course.id)} className="text-destructive hover:text-destructive"><XCircle className="h-4 w-4" /></Button>}
                             <Button variant="ghost" size="icon" onClick={() => deleteCourse(course.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
@@ -221,6 +242,9 @@ const AdminCourses = () => {
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/courses/${course.id}/content`)}><LayoutList className="h-4 w-4 text-muted-foreground" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(course)}><Pencil className="h-4 w-4 text-muted-foreground" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => translateCourse(course.id)} disabled={translatingId === course.id}>
+                          {translatingId === course.id ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <Languages className="h-4 w-4 text-muted-foreground" />}
+                        </Button>
                         {course.status !== "approved" && <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => approve(course.id)}><CheckCircle className="h-4 w-4" /></Button>}
                         {course.status !== "rejected" && <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => reject(course.id)}><XCircle className="h-4 w-4" /></Button>}
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteCourse(course.id)}><Trash2 className="h-4 w-4" /></Button>
