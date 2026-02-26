@@ -18,7 +18,7 @@ interface Course {
   is_featured: boolean; author_name: string; category_name: string; category_id: string | null; lesson_count: number;
 }
 
-interface Category { id: string; name: string; slug: string; }
+interface Category { id: string; name: string; name_pt: string | null; slug: string; }
 
 const Courses = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -40,8 +40,8 @@ const Courses = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: cats } = await supabase.from("categories").select("id, name, slug").order("name");
-      setCategories(cats || []);
+      const { data: cats } = await supabase.from("categories").select("id, name, slug").order("name") as { data: any[] | null };
+      setCategories((cats || []).map((c: any) => ({ id: c.id, name: c.name, name_pt: c.name_pt || null, slug: c.slug })));
 
       const { data, error } = await supabase.from("courses")
         .select("id, title, title_pt, short_description, short_description_pt, image_url, is_free, price, average_rating, total_students, is_featured, author_id, category_id, categories(name)")
@@ -112,7 +112,7 @@ const Courses = () => {
     return matchCat && matchSearch && matchPrice;
   });
 
-  const selectedCategoryName = categories.find((c) => c.id === selectedCategory)?.name;
+  const selectedCategoryName = (() => { const c = categories.find((c) => c.id === selectedCategory); return c ? localized(c, "name", lang) : undefined; })();
   const hasFilters = !!selectedCategory || !!search || priceFilter !== "all";
 
   const FilterContent = () => (
@@ -150,7 +150,7 @@ const Courses = () => {
             <button key={cat.id} onClick={() => handleCategoryClick(cat.id)}
               className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedCategory === cat.id ? "bg-secondary text-secondary-foreground font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
             >
-              {cat.name}
+              {localized(cat, "name", lang)}
             </button>
           ))}
         </div>

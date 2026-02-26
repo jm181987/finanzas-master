@@ -4,6 +4,7 @@ import { TrendingUp, PiggyBank, CreditCard, BookOpen, Wrench, Brain } from "luci
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { localized } from "@/lib/localized";
 
 const iconMap: Record<string, React.ElementType> = {
   TrendingUp, PiggyBank, CreditCard, GraduationCap: BookOpen, Wrench, Brain,
@@ -12,6 +13,7 @@ const iconMap: Record<string, React.ElementType> = {
 interface Category {
   id: string;
   name: string;
+  name_pt: string | null;
   slug: string;
   description: string | null;
   icon: string | null;
@@ -21,7 +23,7 @@ interface Category {
 const CategoriesSection = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const categoryDescriptions: Record<string, string> = {
     inversiones: t("cat_desc_inversiones"),
@@ -35,7 +37,7 @@ const CategoriesSection = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data: cats } = await supabase.from("categories").select("id, name, slug, description, icon").order("name");
+        const { data: cats } = await supabase.from("categories").select("id, name, slug, description, icon").order("name") as { data: any[] | null };
         if (!cats) return;
         const { data: courses } = await supabase.from("courses").select("category_id").eq("is_published", true).eq("status", "approved");
         const countMap: Record<string, number> = {};
@@ -73,7 +75,7 @@ const CategoriesSection = () => {
                 <div className="h-12 w-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
                   <Icon className="h-6 w-6 text-secondary" />
                 </div>
-                <h3 className="text-lg font-semibold text-card-foreground mb-2">{cat.name}</h3>
+                <h3 className="text-lg font-semibold text-card-foreground mb-2">{localized(cat, "name", lang)}</h3>
                 <p className="text-sm text-muted-foreground mb-3">{description}</p>
                 <span className="text-xs font-medium text-secondary">
                   {cat.course_count} {cat.course_count === 1 ? t("cat_course") : t("cat_courses")}
