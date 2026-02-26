@@ -15,7 +15,7 @@ import { localized } from "@/lib/localized";
 interface Course {
   id: string; title: string; title_pt: string | null; short_description: string | null; short_description_pt: string | null; image_url: string | null;
   is_free: boolean; price: number; average_rating: number; total_students: number;
-  is_featured: boolean; author_name: string; category_name: string; category_id: string | null; lesson_count: number;
+  is_featured: boolean; author_name: string; category_name: string; category_name_pt: string | null; category_id: string | null; lesson_count: number;
 }
 
 interface Category { id: string; name: string; name_pt: string | null; slug: string; }
@@ -44,7 +44,7 @@ const Courses = () => {
       setCategories((cats || []).map((c: any) => ({ id: c.id, name: c.name, name_pt: c.name_pt || null, slug: c.slug })));
 
       const { data, error } = await supabase.from("courses")
-        .select("id, title, title_pt, short_description, short_description_pt, image_url, is_free, price, average_rating, total_students, is_featured, author_id, category_id, categories(name)")
+        .select("id, title, title_pt, short_description, short_description_pt, image_url, is_free, price, average_rating, total_students, is_featured, author_id, category_id, categories(name, name_pt)")
         .eq("is_published", true).eq("status", "approved").order("is_featured", { ascending: false });
       if (error) throw error;
       const rawRows = data as any[];
@@ -76,7 +76,7 @@ const Courses = () => {
         image_url: c.image_url, is_free: c.is_free, price: c.price,
         average_rating: c.average_rating || 0, total_students: c.total_students || 0,
         is_featured: c.is_featured, author_name: authorMap[c.author_id] || "Instructor",
-        category_name: c.categories?.name || "General", category_id: c.category_id,
+        category_name: c.categories?.name || "General", category_name_pt: c.categories?.name_pt || null, category_id: c.category_id,
         lesson_count: lessonCounts[c.id] || 0,
       })));
     } catch (err) { console.error(err); }
@@ -262,7 +262,7 @@ const Courses = () => {
                         </div>
 
                         <div className="p-4 sm:p-5">
-                          <span className="text-xs font-medium text-secondary">{course.category_name}</span>
+                          <span className="text-xs font-medium text-secondary">{localized(course, "category_name", lang)}</span>
                           <h3 className="text-sm sm:text-base font-semibold text-card-foreground mt-1 mb-2 line-clamp-2">{localized(course, "title", lang)}</h3>
                           <p className="text-sm text-muted-foreground mb-3">{t("featured_by")} {course.author_name}</p>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">

@@ -22,6 +22,7 @@ interface Course {
   is_featured: boolean;
   author_name?: string;
   category_name?: string;
+  category_name_pt?: string | null;
   lesson_count?: number;
 }
 
@@ -35,7 +36,7 @@ const FeaturedCourses = () => {
       try {
         const { data, error } = await supabase
           .from("courses")
-          .select(`id, title, title_pt, short_description, short_description_pt, image_url, is_free, price, average_rating, total_students, is_featured, author_id, categories(name)`)
+          .select(`id, title, title_pt, short_description, short_description_pt, image_url, is_free, price, average_rating, total_students, is_featured, author_id, categories(name, name_pt)`)
           .eq("is_published", true)
           .eq("status", "approved")
           .order("is_featured", { ascending: false })
@@ -77,6 +78,7 @@ const FeaturedCourses = () => {
             is_featured: c.is_featured,
             author_name: authorMap[c.author_id] || "Instructor",
             category_name: c.categories?.name || "General",
+            category_name_pt: c.categories?.name_pt || null,
             lesson_count: lessonCounts[c.id] || 0,
           }))
         );
@@ -149,7 +151,7 @@ const FeaturedCourses = () => {
                   </div>
 
                   <div className="p-5">
-                    <span className="text-xs font-medium text-secondary">{course.category_name}</span>
+                    <span className="text-xs font-medium text-secondary">{localized(course, "category_name", lang)}</span>
                     <h3 className="text-base font-semibold text-card-foreground mt-1 mb-2 line-clamp-2">{localized(course, "title", lang)}</h3>
                     <p className="text-sm text-muted-foreground mb-3">{t("featured_by")} {course.author_name}</p>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
