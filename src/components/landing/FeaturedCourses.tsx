@@ -35,7 +35,7 @@ const FeaturedCourses = () => {
       try {
         const { data, error } = await supabase
           .from("courses")
-          .select(`id, title, short_description, image_url, is_free, price, average_rating, total_students, is_featured, author_id, categories(name)`)
+          .select(`id, title, title_pt, short_description, short_description_pt, image_url, is_free, price, average_rating, total_students, is_featured, author_id, categories(name)`)
           .eq("is_published", true)
           .eq("status", "approved")
           .order("is_featured", { ascending: false })

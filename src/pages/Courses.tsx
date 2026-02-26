@@ -44,7 +44,7 @@ const Courses = () => {
       setCategories(cats || []);
 
       const { data, error } = await supabase.from("courses")
-        .select("id, title, short_description, image_url, is_free, price, average_rating, total_students, is_featured, author_id, category_id, categories(name)")
+        .select("id, title, title_pt, short_description, short_description_pt, image_url, is_free, price, average_rating, total_students, is_featured, author_id, category_id, categories(name)")
         .eq("is_published", true).eq("status", "approved").order("is_featured", { ascending: false });
       if (error) throw error;
       const rawRows = data as any[];
@@ -237,7 +237,7 @@ const Courses = () => {
                       >
                         <div className="relative h-40 sm:h-44 overflow-hidden bg-muted">
                           {course.image_url ? (
-                            <img src={course.image_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <img src={course.image_url} alt={localized(course, "title", lang)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-primary/10">
                               <BookOpen className="h-12 w-12 text-primary/30" />

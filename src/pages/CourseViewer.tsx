@@ -89,7 +89,7 @@ const CourseViewer = () => {
       // Fetch course
       const { data: courseData, error: courseError } = await supabase
         .from("courses")
-        .select("id, title, description, image_url, is_free, price, author_id")
+        .select("id, title, title_pt, description, description_pt, image_url, is_free, price, author_id")
         .eq("id", id!)
         .eq("is_published", true)
         .eq("status", "approved")
@@ -147,13 +147,13 @@ const CourseViewer = () => {
       // Fetch modules + lessons
       const { data: mods } = await supabase
         .from("modules")
-        .select("id, title, sort_order")
+        .select("id, title, title_pt, sort_order")
         .eq("course_id", id!)
         .order("sort_order");
 
       const { data: lessonRows } = await supabase
         .from("lessons")
-        .select("id, title, content_type, video_url, content_text, pdf_url, duration_minutes, is_free_preview, sort_order, module_id")
+        .select("id, title, title_pt, content_type, video_url, content_text, content_text_pt, pdf_url, duration_minutes, is_free_preview, sort_order, module_id")
         .in("module_id", (mods || []).map((m) => m.id))
         .order("sort_order");
 
