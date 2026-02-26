@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { localized } from "@/lib/localized";
 
 interface Course {
   id: string;
   title: string;
+  title_pt: string | null;
   short_description: string | null;
+  short_description_pt: string | null;
   image_url: string | null;
   is_free: boolean;
   price: number;
@@ -25,7 +28,7 @@ interface Course {
 const FeaturedCourses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -40,14 +43,17 @@ const FeaturedCourses = () => {
 
         if (error) throw error;
 
-        const authorIds = [...new Set((data || []).map((c) => c.author_id))];
+        // Fetch raw rows with PT columns (not in generated types yet)
+        const rawRows = data as any[];
+
+        const authorIds = [...new Set(rawRows.map((c) => c.author_id))];
         let authorMap: Record<string, string> = {};
         if (authorIds.length > 0) {
           const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", authorIds);
           for (const p of profiles || []) authorMap[p.id] = p.full_name || "Instructor";
         }
 
-        const courseIds = (data || []).map((c) => c.id);
+        const courseIds = rawRows.map((c) => c.id);
         let lessonCounts: Record<string, number> = {};
         if (courseIds.length > 0) {
           const { data: modules } = await supabase.from("modules").select("id, course_id").in("course_id", courseIds);
@@ -63,8 +69,9 @@ const FeaturedCourses = () => {
         }
 
         setCourses(
-          (data || []).map((c: any) => ({
-            id: c.id, title: c.title, short_description: c.short_description,
+          rawRows.map((c: any) => ({
+            id: c.id, title: c.title, title_pt: c.title_pt || null,
+            short_description: c.short_description, short_description_pt: c.short_description_pt || null,
             image_url: c.image_url, is_free: c.is_free, price: c.price,
             average_rating: c.average_rating || 0, total_students: c.total_students || 0,
             is_featured: c.is_featured,
@@ -117,7 +124,7 @@ const FeaturedCourses = () => {
                 <Link to={`/courses/${course.id}`} className="block group rounded-2xl overflow-hidden bg-card border border-border hover:shadow-xl hover:shadow-secondary/5 transition-all duration-300">
                   <div className="relative h-44 overflow-hidden bg-muted">
                     {course.image_url ? (
-                      <img src={course.image_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={course.image_url} alt={localized(course, "title", lang)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-primary/10">
                         <BookOpen className="h-12 w-12 text-primary/30" />
@@ -143,7 +150,7 @@ const FeaturedCourses = () => {
 
                   <div className="p-5">
                     <span className="text-xs font-medium text-secondary">{course.category_name}</span>
-                    <h3 className="text-base font-semibold text-card-foreground mt-1 mb-2 line-clamp-2">{course.title}</h3>
+                    <h3 className="text-base font-semibold text-card-foreground mt-1 mb-2 line-clamp-2">{localized(course, "title", lang)}</h3>
                     <p className="text-sm text-muted-foreground mb-3">{t("featured_by")} {course.author_name}</p>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">

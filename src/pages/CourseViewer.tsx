@@ -12,11 +12,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { localized } from "@/lib/localized";
 
 interface Course {
   id: string;
   title: string;
+  title_pt: string | null;
   description: string | null;
+  description_pt: string | null;
   image_url: string | null;
   is_free: boolean;
   price: number;
@@ -26,9 +29,11 @@ interface Course {
 interface Lesson {
   id: string;
   title: string;
+  title_pt: string | null;
   content_type: string;
   video_url: string | null;
   content_text: string | null;
+  content_text_pt: string | null;
   pdf_url: string | null;
   duration_minutes: number | null;
   is_free_preview: boolean;
@@ -39,6 +44,7 @@ interface Lesson {
 interface Module {
   id: string;
   title: string;
+  title_pt: string | null;
   sort_order: number;
   lessons: Lesson[];
 }
@@ -60,7 +66,7 @@ const CourseViewer = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [enrolled, setEnrolled] = useState(false);
@@ -98,11 +104,14 @@ const CourseViewer = () => {
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name")
-        .eq("id", courseData.author_id)
+        .eq("id", (courseData as any).author_id)
         .single();
 
+      const raw = courseData as any;
       setCourse({
-        ...courseData,
+        id: raw.id, title: raw.title, title_pt: raw.title_pt || null,
+        description: raw.description, description_pt: raw.description_pt || null,
+        image_url: raw.image_url, is_free: raw.is_free, price: raw.price,
         author_name: profile?.full_name || "Instructor",
       });
 
@@ -160,11 +169,21 @@ const CourseViewer = () => {
         setCompletedIds(completed);
       }
 
-      const builtModules: Module[] = (mods || []).map((mod) => ({
-        ...mod,
+      const builtModules: Module[] = (mods || []).map((mod: any) => ({
+        id: mod.id,
+        title: mod.title,
+        title_pt: mod.title_pt || null,
+        sort_order: mod.sort_order,
         lessons: (lessonRows || [])
-          .filter((l) => l.module_id === mod.id)
-          .map((l) => ({ ...l, completed: completed.has(l.id) })),
+          .filter((l: any) => l.module_id === mod.id)
+          .map((l: any) => ({
+            id: l.id, title: l.title, title_pt: l.title_pt || null,
+            content_type: l.content_type, video_url: l.video_url,
+            content_text: l.content_text, content_text_pt: l.content_text_pt || null,
+            pdf_url: l.pdf_url, duration_minutes: l.duration_minutes,
+            is_free_preview: l.is_free_preview, sort_order: l.sort_order,
+            completed: completed.has(l.id),
+          })),
       }));
 
       setModules(builtModules);
@@ -356,11 +375,11 @@ const CourseViewer = () => {
         </header>
         <div className="max-w-4xl mx-auto px-6 py-16 text-center">
           {course.image_url && (
-            <img src={course.image_url} alt={course.title} className="w-full max-h-64 object-cover rounded-2xl mb-8" />
+             <img src={course.image_url} alt={localized(course, "title", lang)} className="w-full max-h-64 object-cover rounded-2xl mb-8" />
           )}
           <Badge className="mb-4 bg-secondary/10 text-secondary border-0">{course.is_free ? "Gratis" : `$${Number(course.price).toFixed(2)}`}</Badge>
-          <h1 className="text-3xl font-display font-bold text-foreground mb-4">{course.title}</h1>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">{course.description}</p>
+          <h1 className="text-3xl font-display font-bold text-foreground mb-4">{localized(course, "title", lang)}</h1>
+          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">{localized(course, "description", lang)}</p>
           <p className="text-sm text-muted-foreground mb-6">{t("cv_instructor")}: <span className="font-medium text-foreground">{course.author_name}</span></p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -383,13 +402,13 @@ const CourseViewer = () => {
             {modules.map((mod) => (
               <div key={mod.id} className="mb-6">
                 <h3 className="text-base font-medium text-foreground mb-3 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-secondary" /> {mod.title}
+                  <BookOpen className="h-4 w-4 text-secondary" /> {localized(mod, "title", lang)}
                 </h3>
                 <div className="space-y-2 pl-6">
                   {mod.lessons.map((lesson) => (
                     <div key={lesson.id} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-muted/30 text-sm">
                       {lesson.is_free_preview ? contentIcon(lesson.content_type) : <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
-                      <span className={lesson.is_free_preview ? "text-foreground" : "text-muted-foreground"}>{lesson.title}</span>
+                      <span className={lesson.is_free_preview ? "text-foreground" : "text-muted-foreground"}>{localized(lesson, "title", lang)}</span>
                       {lesson.is_free_preview && <Badge className="ml-auto text-xs bg-emerald-500/10 text-emerald-600 border-0">Preview</Badge>}
                     </div>
                   ))}
@@ -414,7 +433,7 @@ const CourseViewer = () => {
           <ChevronLeft className="h-4 w-4" /> {t("cv_home")}
         </Link>
         <span className="text-muted-foreground">·</span>
-        <h1 className="font-semibold text-foreground text-sm line-clamp-1 flex-1">{course.title}</h1>
+        <h1 className="font-semibold text-foreground text-sm line-clamp-1 flex-1">{localized(course, "title", lang)}</h1>
         {enrolled && (
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs text-muted-foreground hidden sm:block">{progressPct}% {t("cv_completed_pct")}</span>
@@ -450,7 +469,7 @@ const CourseViewer = () => {
                     })}
                     className="w-full flex items-center justify-between text-left px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <span className="text-sm font-semibold text-foreground">{mod.title}</span>
+                    <span className="text-sm font-semibold text-foreground">{localized(mod, "title", lang)}</span>
                     <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${expandedModules.has(mod.id) ? "rotate-90" : ""}`} />
                   </button>
 
@@ -478,7 +497,7 @@ const CourseViewer = () => {
                             ) : (
                               <Lock className="h-4 w-4 text-muted-foreground/40 shrink-0" />
                             )}
-                            <span className="line-clamp-2 flex-1">{lesson.title}</span>
+                            <span className="line-clamp-2 flex-1">{localized(lesson, "title", lang)}</span>
                             <span className="text-muted-foreground ml-auto shrink-0">{contentIcon(lesson.content_type)}</span>
                           </button>
                         );
@@ -526,7 +545,7 @@ const CourseViewer = () => {
               {/* Lesson header */}
               <div className="flex items-start justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="text-2xl font-display font-bold text-foreground">{activeLesson.title}</h2>
+                  <h2 className="text-2xl font-display font-bold text-foreground">{localized(activeLesson, "title", lang)}</h2>
                   {activeLesson.duration_minutes && (
                     <p className="text-sm text-muted-foreground mt-1">{activeLesson.duration_minutes} {t("cv_reading_min")}</p>
                   )}
@@ -550,9 +569,9 @@ const CourseViewer = () => {
               </div>
 
               {/* Text content */}
-              {activeLesson.content_text && (
+              {(activeLesson.content_text || activeLesson.content_text_pt) && (
                 <div className="prose prose-sm max-w-none text-foreground bg-card rounded-2xl p-6 border border-border">
-                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{activeLesson.content_text}</pre>
+                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">{localized(activeLesson, "content_text", lang)}</pre>
                 </div>
               )}
 
@@ -677,7 +696,7 @@ const CourseViewer = () => {
                 transition={{ delay: 0.65 }}
                 className="font-semibold text-foreground mb-6"
               >
-                {course.title}
+                {localized(course, "title", lang)}
               </motion.p>
 
               <motion.div
