@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { localized } from "@/lib/localized";
 import { BookOpen, TrendingUp, Award, CheckCircle2, Play, Trophy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -24,7 +25,7 @@ interface EnrolledCourse {
 
 const Dashboard = () => {
   const { user, role } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +37,7 @@ const Dashboard = () => {
     try {
       const { data: enrollments } = await supabase
         .from("enrollments")
-        .select("course_id, enrolled_at, completed_at, courses(id, title, image_url, is_free)")
+        .select("course_id, enrolled_at, completed_at, courses(id, title, title_pt, image_url, is_free)")
         .eq("user_id", user!.id)
         .order("enrolled_at", { ascending: false });
 
@@ -74,7 +75,7 @@ const Dashboard = () => {
         enrollments.map((e) => {
           const c = e.courses as any;
           return {
-            id: c.id, title: c.title, image_url: c.image_url, is_free: c.is_free,
+            id: c.id, title: localized(c, "title", lang), image_url: c.image_url, is_free: c.is_free,
             enrolled_at: e.enrolled_at, completed_at: e.completed_at,
             lesson_count: lessonCountMap[c.id] || 0,
             completed_lessons: completedMap[c.id] || 0,
