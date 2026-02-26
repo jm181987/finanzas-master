@@ -40,7 +40,7 @@ const Courses = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: cats } = await supabase.from("categories").select("id, name, slug").order("name") as { data: any[] | null };
+      const { data: cats } = await supabase.from("categories").select("id, name, name_pt, slug").order("name") as { data: any[] | null };
       setCategories((cats || []).map((c: any) => ({ id: c.id, name: c.name, name_pt: c.name_pt || null, slug: c.slug })));
 
       const { data, error } = await supabase.from("courses")

@@ -37,7 +37,7 @@ const CategoriesSection = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data: cats } = await supabase.from("categories").select("id, name, slug, description, icon").order("name") as { data: any[] | null };
+        const { data: cats } = await supabase.from("categories").select("id, name, name_pt, slug, description, icon").order("name") as { data: any[] | null };
         if (!cats) return;
         const { data: courses } = await supabase.from("courses").select("category_id").eq("is_published", true).eq("status", "approved");
         const countMap: Record<string, number> = {};
