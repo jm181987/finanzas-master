@@ -242,8 +242,13 @@ const CourseViewer = () => {
   const checkCourseCompletion = useCallback(async (newCompletedIds: Set<string>, totalLessons: number) => {
     if (!user || courseCompleted || totalLessons === 0) return;
     if (newCompletedIds.size < totalLessons) return;
+
+    // Double-check: verify ALL lesson IDs from modules are in the completed set
+    const allLessonIds = modules.flatMap((m) => m.lessons.map((l) => l.id));
+    const allDone = allLessonIds.length > 0 && allLessonIds.every((lid) => newCompletedIds.has(lid));
+    if (!allDone) return;
+
     try {
-      // Use edge function to bypass RLS — users cannot UPDATE enrollments directly
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/complete-course`,
@@ -256,9 +261,11 @@ const CourseViewer = () => {
           body: JSON.stringify({ course_id: id }),
         }
       );
+      const body = await res.json();
       if (!res.ok) {
-        const err = await res.json();
-        console.error("Error marking course complete:", err);
+        // "Not all lessons completed" is expected when server count differs — silently ignore
+        if (body?.error?.includes?.("Not all lessons")) return;
+        console.error("Error marking course complete:", body);
         return;
       }
       setCourseCompleted(true);
@@ -266,7 +273,7 @@ const CourseViewer = () => {
     } catch (err) {
       console.error("Error marking course complete:", err);
     }
-  }, [user, courseCompleted, id]);
+  }, [user, courseCompleted, id, modules]);
 
   const markCompleted = useCallback(async (lessonId: string, currentModules: Module[]) => {
     if (!user) return;
