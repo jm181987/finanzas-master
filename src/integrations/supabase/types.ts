@@ -93,6 +93,7 @@ export type Database = {
           category_id: string | null
           created_at: string
           description: string | null
+          description_pt: string | null
           id: string
           image_url: string | null
           is_featured: boolean
@@ -100,8 +101,10 @@ export type Database = {
           is_published: boolean
           price: number
           short_description: string | null
+          short_description_pt: string | null
           status: string
           title: string
+          title_pt: string | null
           total_students: number | null
           updated_at: string
         }
@@ -111,6 +114,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          description_pt?: string | null
           id?: string
           image_url?: string | null
           is_featured?: boolean
@@ -118,8 +122,10 @@ export type Database = {
           is_published?: boolean
           price?: number
           short_description?: string | null
+          short_description_pt?: string | null
           status?: string
           title: string
+          title_pt?: string | null
           total_students?: number | null
           updated_at?: string
         }
@@ -129,6 +135,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          description_pt?: string | null
           id?: string
           image_url?: string | null
           is_featured?: boolean
@@ -136,8 +143,10 @@ export type Database = {
           is_published?: boolean
           price?: number
           short_description?: string | null
+          short_description_pt?: string | null
           status?: string
           title?: string
+          title_pt?: string | null
           total_students?: number | null
           updated_at?: string
         }
@@ -221,6 +230,7 @@ export type Database = {
       lessons: {
         Row: {
           content_text: string | null
+          content_text_pt: string | null
           content_type: string
           created_at: string
           duration_minutes: number | null
@@ -230,11 +240,13 @@ export type Database = {
           pdf_url: string | null
           sort_order: number
           title: string
+          title_pt: string | null
           updated_at: string
           video_url: string | null
         }
         Insert: {
           content_text?: string | null
+          content_text_pt?: string | null
           content_type?: string
           created_at?: string
           duration_minutes?: number | null
@@ -244,11 +256,13 @@ export type Database = {
           pdf_url?: string | null
           sort_order?: number
           title: string
+          title_pt?: string | null
           updated_at?: string
           video_url?: string | null
         }
         Update: {
           content_text?: string | null
+          content_text_pt?: string | null
           content_type?: string
           created_at?: string
           duration_minutes?: number | null
@@ -258,6 +272,7 @@ export type Database = {
           pdf_url?: string | null
           sort_order?: number
           title?: string
+          title_pt?: string | null
           updated_at?: string
           video_url?: string | null
         }
@@ -276,27 +291,33 @@ export type Database = {
           course_id: string
           created_at: string
           description: string | null
+          description_pt: string | null
           id: string
           sort_order: number
           title: string
+          title_pt: string | null
           updated_at: string
         }
         Insert: {
           course_id: string
           created_at?: string
           description?: string | null
+          description_pt?: string | null
           id?: string
           sort_order?: number
           title: string
+          title_pt?: string | null
           updated_at?: string
         }
         Update: {
           course_id?: string
           created_at?: string
           description?: string | null
+          description_pt?: string | null
           id?: string
           sort_order?: number
           title?: string
+          title_pt?: string | null
           updated_at?: string
         }
         Relationships: [
