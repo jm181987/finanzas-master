@@ -2,6 +2,7 @@ import { LayoutDashboard, Users, BookOpen, Tag, ArrowLeft } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
@@ -20,13 +21,16 @@ export function AdminSidebar() {
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { role } = useAuth();
 
-  const menuItems = [
-    { title: t("admin_nav_dashboard"), url: "/admin", icon: LayoutDashboard },
-    { title: t("admin_nav_users"), url: "/admin/users", icon: Users },
-    { title: t("admin_nav_courses"), url: "/admin/courses", icon: BookOpen },
-    { title: t("admin_nav_categories"), url: "/admin/categories", icon: Tag },
+  const allItems = [
+    { title: t("admin_nav_dashboard"), url: "/admin", icon: LayoutDashboard, roles: ["admin"] },
+    { title: t("admin_nav_users"), url: "/admin/users", icon: Users, roles: ["admin"] },
+    { title: t("admin_nav_courses"), url: "/admin/courses", icon: BookOpen, roles: ["admin", "instructor"] },
+    { title: t("admin_nav_categories"), url: "/admin/categories", icon: Tag, roles: ["admin", "instructor"] },
   ];
+
+  const menuItems = allItems.filter((item) => item.roles.includes(role || ""));
 
   return (
     <Sidebar collapsible="icon">

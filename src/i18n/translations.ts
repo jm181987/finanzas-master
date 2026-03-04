@@ -289,6 +289,8 @@ export const translations = {
   admin_role_admin: { es: "Admin", pt: "Admin" },
   admin_role_developer: { es: "Desarrollador", pt: "Desenvolvedor" },
   admin_role_user: { es: "Usuario", pt: "Usuário" },
+  admin_role_instructor: { es: "Instructor", pt: "Instrutor" },
+  admin_role_agente: { es: "Agente", pt: "Agente" },
   admin_role_updated: { es: "Rol actualizado", pt: "Papel atualizado" },
   admin_users_name_required: { es: "El nombre es requerido", pt: "O nome é obrigatório" },
   admin_users_email_pass_required: { es: "Email y contraseña son requeridos para crear usuario", pt: "E-mail e senha são obrigatórios para criar usuário" },
