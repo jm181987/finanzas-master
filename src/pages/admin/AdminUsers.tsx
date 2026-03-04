@@ -20,7 +20,7 @@ interface UserWithRole {
   bio: string | null;
   avatar_url: string | null;
   created_at: string;
-  role: "admin" | "developer" | "user";
+  role: "admin" | "developer" | "user" | "instructor" | "agente";
   email?: string;
 }
 
@@ -28,6 +28,8 @@ const roleBadgeVariant: Record<string, "default" | "secondary" | "destructive" |
   admin: "destructive",
   developer: "default",
   user: "secondary",
+  instructor: "outline",
+  agente: "secondary",
 };
 
 const emptyForm = { fullName: "", email: "", password: "", role: "user", bio: "" };
@@ -41,6 +43,8 @@ const AdminUsers = () => {
     admin: t("admin_role_admin"),
     developer: t("admin_role_developer"),
     user: t("admin_role_user"),
+    instructor: t("admin_role_instructor"),
+    agente: t("admin_role_agente"),
   };
 
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -193,6 +197,8 @@ const AdminUsers = () => {
                               <SelectContent>
                                 <SelectItem value="user">{t("admin_role_user")}</SelectItem>
                                 <SelectItem value="developer">{t("admin_role_developer")}</SelectItem>
+                                <SelectItem value="instructor">{t("admin_role_instructor")}</SelectItem>
+                                <SelectItem value="agente">{t("admin_role_agente")}</SelectItem>
                                 <SelectItem value="admin">{t("admin_role_admin")}</SelectItem>
                               </SelectContent>
                             </Select>
@@ -235,6 +241,8 @@ const AdminUsers = () => {
                           <SelectContent>
                             <SelectItem value="user">{t("admin_role_user")}</SelectItem>
                             <SelectItem value="developer">{t("admin_role_developer")}</SelectItem>
+                            <SelectItem value="instructor">{t("admin_role_instructor")}</SelectItem>
+                            <SelectItem value="agente">{t("admin_role_agente")}</SelectItem>
                             <SelectItem value="admin">{t("admin_role_admin")}</SelectItem>
                           </SelectContent>
                         </Select>
@@ -277,6 +285,8 @@ const AdminUsers = () => {
                 <SelectContent>
                   <SelectItem value="user">{t("admin_role_user")}</SelectItem>
                   <SelectItem value="developer">{t("admin_role_developer")}</SelectItem>
+                  <SelectItem value="instructor">{t("admin_role_instructor")}</SelectItem>
+                  <SelectItem value="agente">{t("admin_role_agente")}</SelectItem>
                   <SelectItem value="admin">{t("admin_role_admin")}</SelectItem>
                 </SelectContent>
               </Select>

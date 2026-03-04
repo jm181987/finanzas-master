@@ -21,7 +21,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (role !== "admin") return <Navigate to="/dashboard" replace />;
+  if (role !== "admin" && role !== "instructor") return <Navigate to="/dashboard" replace />;
 
   return (
     <SidebarProvider>

@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, BookOpen, DollarSign, GraduationCap } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
+import { Navigate } from "react-router-dom";
 
 interface Metrics {
   totalUsers: number;
@@ -13,6 +15,7 @@ interface Metrics {
 
 const AdminDashboard = () => {
   const { t } = useLanguage();
+  const { role } = useAuth();
   const [metrics, setMetrics] = useState<Metrics>({
     totalUsers: 0,
     totalCourses: 0,
@@ -22,6 +25,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (role === "instructor") return;
     const fetchMetrics = async () => {
       try {
         const [usersRes, coursesRes, enrollmentsRes, paymentsRes] = await Promise.all([
@@ -50,7 +54,10 @@ const AdminDashboard = () => {
     };
 
     fetchMetrics();
-  }, []);
+  }, [role]);
+
+  // Instructors don't have access to the dashboard, redirect to courses
+  if (role === "instructor") return <Navigate to="/admin/courses" replace />;
 
   const cards = [
     { label: t("admin_dash_total_users"), value: metrics.totalUsers, icon: Users, color: "text-blue-500" },

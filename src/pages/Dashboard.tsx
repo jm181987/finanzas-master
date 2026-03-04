@@ -110,6 +110,8 @@ const Dashboard = () => {
             <p className="text-muted-foreground mt-1">
               {role === "admin" && `👑 ${t("dash_admin_badge")} — `}
               {role === "developer" && `🛠️ ${t("dash_dev_badge")} — `}
+              {role === "instructor" && `📚 ${t("admin_role_instructor")} — `}
+              {role === "agente" && `🤝 ${t("admin_role_agente")} — `}
               {t("dash_learning_panel")}
             </p>
           </div>

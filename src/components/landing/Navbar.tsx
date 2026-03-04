@@ -84,7 +84,7 @@ const Navbar = () => {
 
               {user ? (
                 <>
-                  {role === "admin" && (
+                  {(role === "admin" || role === "instructor") && (
                     <Link to="/admin">
                       <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-navy-light/50 gap-2">
                         <Shield className="h-4 w-4" /> {t("nav_admin")}
@@ -151,7 +151,7 @@ const Navbar = () => {
                 <div className="flex flex-col gap-2 pt-3 border-t border-navy-light/30">
                   {user ? (
                     <>
-                      {role === "admin" && (
+                      {(role === "admin" || role === "instructor") && (
                         <Link to="/admin" onClick={() => setIsOpen(false)}>
                           <Button variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold gap-2">
                             <Shield className="h-4 w-4" /> {t("nav_admin")}
