@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, LayoutDashboard, Shield, KeyRound, ChevronDown, Globe } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, Shield, KeyRound, ChevronDown, Globe, Download } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
