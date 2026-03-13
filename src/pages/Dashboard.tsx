@@ -29,6 +29,7 @@ const Dashboard = () => {
   const { t, lang } = useLanguage();
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const { canInstall, install } = usePWAInstall();
 
   useEffect(() => {
     if (user) fetchEnrollments();
