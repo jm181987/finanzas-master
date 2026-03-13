@@ -24,9 +24,9 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}"],
       },
       manifest: {
-        name: "FinanzasMaster — Educación Financiera",
-        short_name: "FinanzasMaster",
-        description: "Plataforma líder en educación financiera. Cursos en video, PDFs y contenido práctico.",
+        name: "Finanzas Master",
+        short_name: "Finanzas Master",
+        description: "Aprende inversiones, ahorro inteligente y educación financiera con cursos de expertos.",
         theme_color: "#0f172a",
         background_color: "#0f172a",
         display: "standalone",
@@ -35,17 +35,17 @@ export default defineConfig(({ mode }) => ({
         start_url: "/",
         icons: [
           {
-            src: "/favicon.png",
+            src: "/pwa-icon-192.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/logo.png",
+            src: "/pwa-icon-512.png",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "/logo.png",
+            src: "/pwa-icon-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
