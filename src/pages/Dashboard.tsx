@@ -116,7 +116,11 @@ const Dashboard = () => {
               {role === "agente" && `🤝 ${t("admin_role_agente")} — `}
               {t("dash_learning_panel")}
             </p>
-          </div>
+            {canInstall && (
+              <Button onClick={install} variant="outline" className="mt-3 gap-2">
+                <Download className="h-4 w-4" /> {t("pwa_install")}
+              </Button>
+            )}
 
           <div className="grid sm:grid-cols-3 gap-6 mb-10">
             {stats.map((stat) => (
