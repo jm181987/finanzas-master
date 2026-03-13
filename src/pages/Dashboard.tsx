@@ -218,6 +218,7 @@ const Dashboard = () => {
         </div>
       </main>
       <Footer />
+      {showIOSPrompt && <IOSInstallPrompt onClose={dismissIOSPrompt} />}
     </div>
   );
 };
