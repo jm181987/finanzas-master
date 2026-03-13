@@ -12,6 +12,7 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import IOSInstallPrompt from "@/components/IOSInstallPrompt";
 
 interface EnrolledCourse {
   id: string;
