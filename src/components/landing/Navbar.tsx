@@ -173,6 +173,11 @@ const Navbar = () => {
                       <button onClick={() => { setIsOpen(false); setShowPwdModal(true); }} className="flex items-center justify-center gap-2 w-full py-2 text-sm text-primary-foreground/80 hover:text-gold transition-colors">
                         <KeyRound className="h-4 w-4" /> {t("nav_change_password")}
                       </button>
+                      {canInstall && (
+                        <Button onClick={() => { install(); setIsOpen(false); }} variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold gap-2">
+                          <Download className="h-4 w-4" /> {t("pwa_install")}
+                        </Button>
+                      )}
                       <Button onClick={() => { handleSignOut(); setIsOpen(false); }} variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold gap-2">
                         <LogOut className="h-4 w-4" /> {t("nav_logout")}
                       </Button>

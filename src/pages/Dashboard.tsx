@@ -122,6 +122,8 @@ const Dashboard = () => {
               </Button>
             )}
 
+          </div>
+
           <div className="grid sm:grid-cols-3 gap-6 mb-10">
             {stats.map((stat) => (
               <Card key={stat.label} className="border-border">
