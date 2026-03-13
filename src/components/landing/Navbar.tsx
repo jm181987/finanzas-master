@@ -108,6 +108,11 @@ const Navbar = () => {
                         <button onClick={() => { setPanelOpen(false); setShowPwdModal(true); }} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors">
                           <KeyRound className="h-4 w-4 text-secondary" /> {t("nav_change_password")}
                         </button>
+                        {canInstall && (
+                          <button onClick={() => { setPanelOpen(false); install(); }} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors">
+                            <Download className="h-4 w-4 text-secondary" /> {t("pwa_install")}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
