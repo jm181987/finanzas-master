@@ -205,7 +205,7 @@ const Navbar = () => {
       </nav>
 
       {showPwdModal && <PasswordModal onClose={() => setShowPwdModal(false)} />}
-      {showIOSPrompt && <IOSInstallModal onClose={dismissIOSPrompt} />}
+      {showIOSPrompt && <IOSInstallPrompt onClose={dismissIOSPrompt} />}
     </>
   );
 };
