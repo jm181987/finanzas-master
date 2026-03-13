@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Lang } from "@/i18n/translations";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 import logo from "@/assets/logo.png";
 
 const Navbar = () => {
