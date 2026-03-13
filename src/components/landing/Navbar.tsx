@@ -8,6 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import type { Lang } from "@/i18n/translations";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import logo from "@/assets/logo.png";
+import IOSInstallPrompt from "@/components/IOSInstallPrompt";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
