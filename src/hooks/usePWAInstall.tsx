@@ -1,29 +1,46 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 let deferredPrompt: any = null;
 
+const isIOS = () => {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as any).MSStream;
+};
+
+const isInStandaloneMode = () => {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (navigator as any).standalone === true
+  );
+};
+
 export const usePWAInstall = () => {
   const [canInstall, setCanInstall] = useState(false);
+  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
   useEffect(() => {
+    if (isInStandaloneMode()) return;
+
+    // Android / desktop: listen for native prompt
     const handler = (e: Event) => {
       e.preventDefault();
       deferredPrompt = e;
       setCanInstall(true);
     };
-
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Check if already installed
-    const mediaQuery = window.matchMedia("(display-mode: standalone)");
-    if (mediaQuery.matches) {
-      setCanInstall(false);
+    // iOS: show manual instructions
+    if (isIOS() && !isInStandaloneMode()) {
+      setCanInstall(true);
     }
 
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  const install = async () => {
+  const install = useCallback(async () => {
+    if (isIOS()) {
+      setShowIOSPrompt(true);
+      return;
+    }
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const result = await deferredPrompt.userChoice;
@@ -31,7 +48,11 @@ export const usePWAInstall = () => {
       setCanInstall(false);
     }
     deferredPrompt = null;
-  };
+  }, []);
 
-  return { canInstall, install };
+  const dismissIOSPrompt = useCallback(() => {
+    setShowIOSPrompt(false);
+  }, []);
+
+  return { canInstall, install, showIOSPrompt, dismissIOSPrompt };
 };
