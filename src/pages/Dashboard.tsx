@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { localized } from "@/lib/localized";
-import { BookOpen, TrendingUp, Award, CheckCircle2, Play, Trophy } from "lucide-react";
+import { BookOpen, TrendingUp, Award, CheckCircle2, Play, Trophy, Download } from "lucide-react";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const { t, lang } = useLanguage();
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const { canInstall, install } = usePWAInstall();
 
   useEffect(() => {
     if (user) fetchEnrollments();
@@ -114,6 +116,12 @@ const Dashboard = () => {
               {role === "agente" && `🤝 ${t("admin_role_agente")} — `}
               {t("dash_learning_panel")}
             </p>
+            {canInstall && (
+              <Button onClick={install} variant="outline" className="mt-3 gap-2">
+                <Download className="h-4 w-4" /> {t("pwa_install")}
+              </Button>
+            )}
+
           </div>
 
           <div className="grid sm:grid-cols-3 gap-6 mb-10">

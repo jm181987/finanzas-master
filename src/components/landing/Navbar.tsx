@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, LayoutDashboard, Shield, KeyRound, ChevronDown, Globe } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, Shield, KeyRound, ChevronDown, Globe, Download } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { Lang } from "@/i18n/translations";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 import logo from "@/assets/logo.png";
 
 const Navbar = () => {
@@ -17,6 +18,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang, setLang, t } = useLanguage();
+  const { canInstall, install } = usePWAInstall();
 
   const isLanding = location.pathname === "/";
 
@@ -106,6 +108,11 @@ const Navbar = () => {
                         <button onClick={() => { setPanelOpen(false); setShowPwdModal(true); }} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors">
                           <KeyRound className="h-4 w-4 text-secondary" /> {t("nav_change_password")}
                         </button>
+                        {canInstall && (
+                          <button onClick={() => { setPanelOpen(false); install(); }} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors">
+                            <Download className="h-4 w-4 text-secondary" /> {t("pwa_install")}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -166,6 +173,11 @@ const Navbar = () => {
                       <button onClick={() => { setIsOpen(false); setShowPwdModal(true); }} className="flex items-center justify-center gap-2 w-full py-2 text-sm text-primary-foreground/80 hover:text-gold transition-colors">
                         <KeyRound className="h-4 w-4" /> {t("nav_change_password")}
                       </button>
+                      {canInstall && (
+                        <Button onClick={() => { install(); setIsOpen(false); }} variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold gap-2">
+                          <Download className="h-4 w-4" /> {t("pwa_install")}
+                        </Button>
+                      )}
                       <Button onClick={() => { handleSignOut(); setIsOpen(false); }} variant="ghost" className="w-full text-primary-foreground/80 hover:text-gold gap-2">
                         <LogOut className="h-4 w-4" /> {t("nav_logout")}
                       </Button>

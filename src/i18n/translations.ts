@@ -422,6 +422,10 @@ export const translations = {
   admin_content_pdf_only: { es: "Solo se permiten archivos PDF", pt: "Apenas arquivos PDF são permitidos" },
   admin_content_pdf_uploaded: { es: "PDF subido correctamente", pt: "PDF enviado com sucesso" },
   admin_content_pdf_error: { es: "Error al subir PDF", pt: "Erro ao enviar PDF" },
+
+  // PWA
+  pwa_install: { es: "Instalar App", pt: "Instalar App" },
+  pwa_install_desc: { es: "Instalar aplicación", pt: "Instalar aplicativo" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
