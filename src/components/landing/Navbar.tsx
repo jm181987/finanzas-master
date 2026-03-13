@@ -18,6 +18,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang, setLang, t } = useLanguage();
+  const { canInstall, install } = usePWAInstall();
 
   const isLanding = location.pathname === "/";
 
