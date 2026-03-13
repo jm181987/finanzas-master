@@ -426,6 +426,12 @@ export const translations = {
   // PWA
   pwa_install: { es: "Instalar App", pt: "Instalar App" },
   pwa_install_desc: { es: "Instalar aplicación", pt: "Instalar aplicativo" },
+  pwa_ios_title: { es: "Instalar en iPhone/iPad", pt: "Instalar no iPhone/iPad" },
+  pwa_ios_step1: { es: "Toca el botón de Compartir", pt: "Toque o botão Compartilhar" },
+  pwa_ios_step2: { es: 'Selecciona "Agregar a pantalla de inicio"', pt: 'Selecione "Adicionar à Tela de Início"' },
+  pwa_ios_step3: { es: 'Toca "Agregar" para confirmar', pt: 'Toque "Adicionar" para confirmar' },
+  pwa_ios_close: { es: "Entendido", pt: "Entendi" },
+  pwa_ios_share_icon: { es: "(el ícono con la flecha hacia arriba)", pt: "(o ícone com a seta para cima)" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
