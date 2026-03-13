@@ -12,7 +12,6 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import IOSInstallPrompt from "@/components/IOSInstallPrompt";
 
 interface EnrolledCourse {
   id: string;
@@ -30,7 +29,7 @@ const Dashboard = () => {
   const { t, lang } = useLanguage();
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
-  const { canInstall, install, showIOSPrompt, dismissIOSPrompt } = usePWAInstall();
+  const { canInstall, install } = usePWAInstall();
 
   useEffect(() => {
     if (user) fetchEnrollments();
@@ -219,7 +218,6 @@ const Dashboard = () => {
         </div>
       </main>
       <Footer />
-      {showIOSPrompt && <IOSInstallPrompt onClose={dismissIOSPrompt} />}
     </div>
   );
 };

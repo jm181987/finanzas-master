@@ -8,7 +8,6 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import type { Lang } from "@/i18n/translations";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import logo from "@/assets/logo.png";
-import IOSInstallPrompt from "@/components/IOSInstallPrompt";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +18,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { lang, setLang, t } = useLanguage();
-  const { canInstall, install, showIOSPrompt, dismissIOSPrompt } = usePWAInstall();
+  const { canInstall, install } = usePWAInstall();
 
   const isLanding = location.pathname === "/";
 
@@ -205,7 +204,6 @@ const Navbar = () => {
       </nav>
 
       {showPwdModal && <PasswordModal onClose={() => setShowPwdModal(false)} />}
-      {showIOSPrompt && <IOSInstallPrompt onClose={dismissIOSPrompt} />}
     </>
   );
 };
