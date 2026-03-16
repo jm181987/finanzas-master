@@ -100,6 +100,14 @@ const CourseViewer = () => {
         return;
       }
 
+      // Check if author is an instructor — restrict access to agente/admin only
+      const authorId = (courseData as any).author_id;
+      const { data: authorRole } = await (supabase.rpc as any)("get_user_role", { _user_id: authorId });
+      if (authorRole === "instructor" && role !== "admin" && role !== "agente") {
+        navigate("/courses");
+        return;
+      }
+
       // Get author name
       const { data: profile } = await supabase
         .from("profiles")
