@@ -11,11 +11,12 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { localized } from "@/lib/localized";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Course {
   id: string; title: string; title_pt: string | null; short_description: string | null; short_description_pt: string | null; image_url: string | null;
   is_free: boolean; price: number; average_rating: number; total_students: number;
-  is_featured: boolean; author_name: string; category_name: string; category_name_pt: string | null; category_id: string | null; lesson_count: number;
+  is_featured: boolean; author_name: string; author_id: string; category_name: string; category_name_pt: string | null; category_id: string | null; lesson_count: number;
 }
 
 interface Category { id: string; name: string; name_pt: string | null; slug: string; }
@@ -29,7 +30,9 @@ const Courses = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [instructorAuthorIds, setInstructorAuthorIds] = useState<Set<string>>(new Set());
   const { t, lang } = useLanguage();
+  const { role } = useAuth();
 
   useEffect(() => { fetchData(); }, []);
   useEffect(() => {
@@ -71,11 +74,18 @@ const Courses = () => {
         }
       }
 
+      // Fetch instructor author IDs
+      const { data: instructorRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "instructor");
+      setInstructorAuthorIds(new Set((instructorRoles || []).map((r: any) => r.user_id)));
+
       setCourses(rawRows.map((c: any) => ({
         id: c.id, title: c.title, title_pt: c.title_pt || null, short_description: c.short_description, short_description_pt: c.short_description_pt || null,
         image_url: c.image_url, is_free: c.is_free, price: c.price,
         average_rating: c.average_rating || 0, total_students: c.total_students || 0,
-        is_featured: c.is_featured, author_name: authorMap[c.author_id] || "Instructor",
+        is_featured: c.is_featured, author_name: authorMap[c.author_id] || "Instructor", author_id: c.author_id,
         category_name: c.categories?.name || "General", category_name_pt: c.categories?.name_pt || null, category_id: c.category_id,
         lesson_count: lessonCounts[c.id] || 0,
       })));
@@ -103,7 +113,10 @@ const Courses = () => {
     setSearchParams({}, { replace: true });
   };
 
+  const canSeeInstructorCourses = role === "admin" || role === "agente";
   const filtered = courses.filter((c) => {
+    // Hide instructor-created courses from non-agente/non-admin users
+    if (instructorAuthorIds.has(c.author_id) && !canSeeInstructorCourses) return false;
     const matchCat = !selectedCategory || c.category_id === selectedCategory;
     const displayTitle = localized(c, "title", lang);
     const displayDesc = localized(c, "short_description", lang);

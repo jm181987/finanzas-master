@@ -64,7 +64,7 @@ const getYouTubeId = (url: string) => {
 const CourseViewer = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { toast } = useToast();
   const { t, lang } = useLanguage();
   const [course, setCourse] = useState<Course | null>(null);
@@ -97,6 +97,14 @@ const CourseViewer = () => {
 
       if (courseError || !courseData) {
         navigate("/");
+        return;
+      }
+
+      // Check if author is an instructor — restrict access to agente/admin only
+      const authorId = (courseData as any).author_id;
+      const { data: authorRole } = await (supabase.rpc as any)("get_user_role", { _user_id: authorId });
+      if (authorRole === "instructor" && role !== "admin" && role !== "agente") {
+        navigate("/courses");
         return;
       }
 

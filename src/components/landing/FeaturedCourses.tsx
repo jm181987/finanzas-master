@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { localized } from "@/lib/localized";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Course {
   id: string;
@@ -21,6 +22,7 @@ interface Course {
   total_students: number;
   is_featured: boolean;
   author_name?: string;
+  author_id?: string;
   category_name?: string;
   category_name_pt?: string | null;
   lesson_count?: number;
@@ -29,7 +31,9 @@ interface Course {
 const FeaturedCourses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [instructorAuthorIds, setInstructorAuthorIds] = useState<Set<string>>(new Set());
   const { t, lang } = useLanguage();
+  const { role } = useAuth();
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -69,19 +73,28 @@ const FeaturedCourses = () => {
           }
         }
 
-        setCourses(
-          rawRows.map((c: any) => ({
-            id: c.id, title: c.title, title_pt: c.title_pt || null,
-            short_description: c.short_description, short_description_pt: c.short_description_pt || null,
-            image_url: c.image_url, is_free: c.is_free, price: c.price,
-            average_rating: c.average_rating || 0, total_students: c.total_students || 0,
-            is_featured: c.is_featured,
-            author_name: authorMap[c.author_id] || "Instructor",
-            category_name: c.categories?.name || "General",
-            category_name_pt: c.categories?.name_pt || null,
-            lesson_count: lessonCounts[c.id] || 0,
-          }))
-        );
+        // Fetch instructor author IDs to filter visibility
+        const { data: instructorRoles } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "instructor");
+        const instructorIds = new Set((instructorRoles || []).map((r: any) => r.user_id));
+
+        const allCourses = rawRows.map((c: any) => ({
+          id: c.id, title: c.title, title_pt: c.title_pt || null,
+          short_description: c.short_description, short_description_pt: c.short_description_pt || null,
+          image_url: c.image_url, is_free: c.is_free, price: c.price,
+          average_rating: c.average_rating || 0, total_students: c.total_students || 0,
+          is_featured: c.is_featured,
+          author_name: authorMap[c.author_id] || "Instructor",
+          author_id: c.author_id,
+          category_name: c.categories?.name || "General",
+          category_name_pt: c.categories?.name_pt || null,
+          lesson_count: lessonCounts[c.id] || 0,
+        }));
+
+        setCourses(allCourses);
+        setInstructorAuthorIds(instructorIds);
       } catch (err) {
         console.error("Error fetching courses:", err);
       } finally {
@@ -90,6 +103,15 @@ const FeaturedCourses = () => {
     };
     fetchCourses();
   }, []);
+
+  // Filter: instructor-created courses only visible to agente/admin
+  const canSeeInstructorCourses = role === "admin" || role === "agente";
+  const visibleCourses = courses.filter((c) => {
+    if (c.author_id && instructorAuthorIds.has(c.author_id)) {
+      return canSeeInstructorCourses;
+    }
+    return true;
+  });
 
   return (
     <section id="cursos" className="py-12 sm:py-20 bg-muted/30">
@@ -114,14 +136,14 @@ const FeaturedCourses = () => {
               </div>
             ))}
           </div>
-        ) : courses.length === 0 ? (
+        ) : visibleCourses.length === 0 ? (
           <div className="text-center py-16">
             <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">{t("featured_coming_soon")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {courses.map((course, i) => (
+            {visibleCourses.map((course, i) => (
               <motion.div key={course.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
                 <Link to={`/courses/${course.id}`} className="block group rounded-2xl overflow-hidden bg-card border border-border hover:shadow-xl hover:shadow-secondary/5 transition-all duration-300">
                   <div className="relative h-44 overflow-hidden bg-muted">
@@ -169,7 +191,7 @@ const FeaturedCourses = () => {
           </div>
         )}
 
-        {courses.length > 0 && (
+        {visibleCourses.length > 0 && (
           <div className="text-center mt-10">
             <Link to="/courses">
               <Button variant="outline" size="lg" className="border-secondary/40 text-secondary hover:bg-secondary/10">
