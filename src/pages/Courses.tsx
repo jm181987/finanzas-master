@@ -74,11 +74,18 @@ const Courses = () => {
         }
       }
 
+      // Fetch instructor author IDs
+      const { data: instructorRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "instructor");
+      setInstructorAuthorIds(new Set((instructorRoles || []).map((r: any) => r.user_id)));
+
       setCourses(rawRows.map((c: any) => ({
         id: c.id, title: c.title, title_pt: c.title_pt || null, short_description: c.short_description, short_description_pt: c.short_description_pt || null,
         image_url: c.image_url, is_free: c.is_free, price: c.price,
         average_rating: c.average_rating || 0, total_students: c.total_students || 0,
-        is_featured: c.is_featured, author_name: authorMap[c.author_id] || "Instructor",
+        is_featured: c.is_featured, author_name: authorMap[c.author_id] || "Instructor", author_id: c.author_id,
         category_name: c.categories?.name || "General", category_name_pt: c.categories?.name_pt || null, category_id: c.category_id,
         lesson_count: lessonCounts[c.id] || 0,
       })));
