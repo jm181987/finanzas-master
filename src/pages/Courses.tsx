@@ -113,7 +113,10 @@ const Courses = () => {
     setSearchParams({}, { replace: true });
   };
 
+  const canSeeInstructorCourses = role === "admin" || role === "agente";
   const filtered = courses.filter((c) => {
+    // Hide instructor-created courses from non-agente/non-admin users
+    if (instructorAuthorIds.has(c.author_id) && !canSeeInstructorCourses) return false;
     const matchCat = !selectedCategory || c.category_id === selectedCategory;
     const displayTitle = localized(c, "title", lang);
     const displayDesc = localized(c, "short_description", lang);
