@@ -11,6 +11,7 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { localized } from "@/lib/localized";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Course {
   id: string; title: string; title_pt: string | null; short_description: string | null; short_description_pt: string | null; image_url: string | null;
