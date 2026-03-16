@@ -136,14 +136,14 @@ const FeaturedCourses = () => {
               </div>
             ))}
           </div>
-        ) : courses.length === 0 ? (
+        ) : visibleCourses.length === 0 ? (
           <div className="text-center py-16">
             <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">{t("featured_coming_soon")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {courses.map((course, i) => (
+            {visibleCourses.map((course, i) => (
               <motion.div key={course.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
                 <Link to={`/courses/${course.id}`} className="block group rounded-2xl overflow-hidden bg-card border border-border hover:shadow-xl hover:shadow-secondary/5 transition-all duration-300">
                   <div className="relative h-44 overflow-hidden bg-muted">
