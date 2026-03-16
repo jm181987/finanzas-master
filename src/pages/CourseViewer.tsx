@@ -64,7 +64,7 @@ const getYouTubeId = (url: string) => {
 const CourseViewer = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { toast } = useToast();
   const { t, lang } = useLanguage();
   const [course, setCourse] = useState<Course | null>(null);
