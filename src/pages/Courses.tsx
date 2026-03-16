@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 interface Course {
   id: string; title: string; title_pt: string | null; short_description: string | null; short_description_pt: string | null; image_url: string | null;
   is_free: boolean; price: number; average_rating: number; total_students: number;
-  is_featured: boolean; author_name: string; category_name: string; category_name_pt: string | null; category_id: string | null; lesson_count: number;
+  is_featured: boolean; author_name: string; author_id: string; category_name: string; category_name_pt: string | null; category_id: string | null; lesson_count: number;
 }
 
 interface Category { id: string; name: string; name_pt: string | null; slug: string; }
