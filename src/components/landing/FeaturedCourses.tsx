@@ -191,7 +191,7 @@ const FeaturedCourses = () => {
           </div>
         )}
 
-        {courses.length > 0 && (
+        {visibleCourses.length > 0 && (
           <div className="text-center mt-10">
             <Link to="/courses">
               <Button variant="outline" size="lg" className="border-secondary/40 text-secondary hover:bg-secondary/10">
