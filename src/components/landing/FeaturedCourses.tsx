@@ -104,6 +104,15 @@ const FeaturedCourses = () => {
     fetchCourses();
   }, []);
 
+  // Filter: instructor-created courses only visible to agente/admin
+  const canSeeInstructorCourses = role === "admin" || role === "agente";
+  const visibleCourses = courses.filter((c) => {
+    if (c.author_id && instructorAuthorIds.has(c.author_id)) {
+      return canSeeInstructorCourses;
+    }
+    return true;
+  });
+
   return (
     <section id="cursos" className="py-12 sm:py-20 bg-muted/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
