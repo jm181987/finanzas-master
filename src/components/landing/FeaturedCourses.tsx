@@ -31,6 +31,7 @@ interface Course {
 const FeaturedCourses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [instructorAuthorIds, setInstructorAuthorIds] = useState<Set<string>>(new Set());
   const { t, lang } = useLanguage();
   const { role } = useAuth();
 
