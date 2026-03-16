@@ -30,7 +30,9 @@ const Courses = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [instructorAuthorIds, setInstructorAuthorIds] = useState<Set<string>>(new Set());
   const { t, lang } = useLanguage();
+  const { role } = useAuth();
 
   useEffect(() => { fetchData(); }, []);
   useEffect(() => {
