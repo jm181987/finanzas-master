@@ -22,6 +22,7 @@ interface Course {
   total_students: number;
   is_featured: boolean;
   author_name?: string;
+  author_id?: string;
   category_name?: string;
   category_name_pt?: string | null;
   lesson_count?: number;
