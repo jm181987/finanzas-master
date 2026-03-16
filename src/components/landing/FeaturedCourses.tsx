@@ -32,6 +32,7 @@ const FeaturedCourses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const { t, lang } = useLanguage();
+  const { role } = useAuth();
 
   useEffect(() => {
     const fetchCourses = async () => {
