@@ -87,6 +87,7 @@ const Navbar = () => {
 
               {user ? (
                 <>
+                  <NotificationBell />
                   {(role === "admin" || role === "instructor") && (
                     <Link to="/admin">
                       <Button variant="ghost" className="text-primary-foreground/80 hover:text-gold hover:bg-navy-light/50 gap-2">
