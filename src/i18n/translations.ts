@@ -426,6 +426,34 @@ export const translations = {
   // PWA
   pwa_install: { es: "Instalar App", pt: "Instalar App" },
   pwa_install_desc: { es: "Instalar aplicación", pt: "Instalar aplicativo" },
+
+  // Notifications
+  notif_title: { es: "Notificaciones", pt: "Notificações" },
+  notif_mark_all_read: { es: "Marcar todo leído", pt: "Marcar tudo como lido" },
+  notif_empty: { es: "No tienes notificaciones", pt: "Você não tem notificações" },
+  notif_enable_browser: { es: "🔔 Habilitar notificaciones del navegador", pt: "🔔 Ativar notificações do navegador" },
+  notif_admin_title: { es: "Notificaciones", pt: "Notificações" },
+  notif_admin_send_new: { es: "Enviar Notificación", pt: "Enviar Notificação" },
+  notif_admin_notif_title: { es: "Título", pt: "Título" },
+  notif_admin_title_placeholder: { es: "Ej: Nuevo curso disponible", pt: "Ex: Novo curso disponível" },
+  notif_admin_body: { es: "Mensaje", pt: "Mensagem" },
+  notif_admin_body_placeholder: { es: "Escribe el mensaje de la notificación...", pt: "Escreva a mensagem da notificação..." },
+  notif_admin_type: { es: "Tipo", pt: "Tipo" },
+  notif_admin_target: { es: "Destinatario", pt: "Destinatário" },
+  notif_admin_select_user: { es: "Seleccionar usuario", pt: "Selecionar usuário" },
+  notif_admin_select_user_placeholder: { es: "Buscar usuario...", pt: "Buscar usuário..." },
+  notif_admin_send: { es: "Enviar notificación", pt: "Enviar notificação" },
+  notif_admin_sending: { es: "Enviando...", pt: "Enviando..." },
+  notif_admin_sent: { es: "Notificación enviada", pt: "Notificação enviada" },
+  notif_admin_error_empty: { es: "Título y mensaje son obligatorios", pt: "Título e mensagem são obrigatórios" },
+  notif_admin_history: { es: "Historial", pt: "Histórico" },
+  notif_admin_no_history: { es: "Sin notificaciones enviadas", pt: "Sem notificações enviadas" },
+  notif_type_manual: { es: "Manual", pt: "Manual" },
+  notif_type_new_course: { es: "Nuevo curso", pt: "Novo curso" },
+  notif_type_study_reminder: { es: "Recordatorio", pt: "Lembrete" },
+  notif_target_all: { es: "Todos", pt: "Todos" },
+  notif_target_user: { es: "Usuario específico", pt: "Usuário específico" },
+  admin_nav_notifications: { es: "Notificaciones", pt: "Notificações" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
