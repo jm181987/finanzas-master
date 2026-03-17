@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, Tag, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, Tag, ArrowLeft, Bell } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -28,6 +28,7 @@ export function AdminSidebar() {
     { title: t("admin_nav_users"), url: "/admin/users", icon: Users, roles: ["admin"] },
     { title: t("admin_nav_courses"), url: "/admin/courses", icon: BookOpen, roles: ["admin", "instructor"] },
     { title: t("admin_nav_categories"), url: "/admin/categories", icon: Tag, roles: ["admin", "instructor"] },
+    { title: t("admin_nav_notifications"), url: "/admin/notifications", icon: Bell, roles: ["admin"] },
   ];
 
   const menuItems = allItems.filter((item) => item.roles.includes(role || ""));
