@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { es, ptBR } from "date-fns/locale";
 
+const notificationsTable = () => (supabase.from as any)("notifications");
+
 const AdminNotifications = () => {
   const { user } = useAuth();
   const { lang, t } = useLanguage();
@@ -27,18 +29,11 @@ const AdminNotifications = () => {
 
   const dateLocale = lang === "es" ? es : ptBR;
 
-  useEffect(() => {
-    loadHistory();
-    loadUsers();
-  }, []);
+  useEffect(() => { loadHistory(); loadUsers(); }, []);
 
   const loadHistory = async () => {
-    const { data } = await supabase
-      .from("notifications")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(20);
-    if (data) setHistory(data as any[]);
+    const { data } = await notificationsTable().select("*").order("created_at", { ascending: false }).limit(20);
+    if (data) setHistory(data);
   };
 
   const loadUsers = async () => {
@@ -47,37 +42,25 @@ const AdminNotifications = () => {
   };
 
   const handleSend = async () => {
-    if (!title.trim() || !body.trim()) {
-      toast.error(t("notif_admin_error_empty"));
-      return;
-    }
-
+    if (!title.trim() || !body.trim()) { toast.error(t("notif_admin_error_empty")); return; }
     setSending(true);
-    const payload: any = {
+    const { error } = await notificationsTable().insert({
       title: title.trim(),
       body: body.trim(),
       type,
       created_by: user?.id,
       target_user_id: targetType === "user" && targetUserId ? targetUserId : null,
-    };
-
-    const { error } = await supabase.from("notifications").insert(payload);
+    });
     setSending(false);
-
-    if (error) {
-      toast.error("Error: " + error.message);
-      return;
-    }
-
+    if (error) { toast.error("Error: " + error.message); return; }
     toast.success(t("notif_admin_sent"));
-    setTitle("");
-    setBody("");
+    setTitle(""); setBody("");
     loadHistory();
   };
 
-  const typeIcon = (t: string) => {
-    if (t === "new_course") return <BookOpen className="h-4 w-4" />;
-    if (t === "study_reminder") return <Bell className="h-4 w-4" />;
+  const typeIcon = (tp: string) => {
+    if (tp === "new_course") return <BookOpen className="h-4 w-4" />;
+    if (tp === "study_reminder") return <Bell className="h-4 w-4" />;
     return <Send className="h-4 w-4" />;
   };
 
@@ -89,7 +72,6 @@ const AdminNotifications = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Send form */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -102,12 +84,10 @@ const AdminNotifications = () => {
               <Label>{t("notif_admin_notif_title")}</Label>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("notif_admin_title_placeholder")} />
             </div>
-
             <div className="space-y-1.5">
               <Label>{t("notif_admin_body")}</Label>
               <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder={t("notif_admin_body_placeholder")} rows={3} />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>{t("notif_admin_type")}</Label>
@@ -120,7 +100,6 @@ const AdminNotifications = () => {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-1.5">
                 <Label>{t("notif_admin_target")}</Label>
                 <Select value={targetType} onValueChange={(v) => setTargetType(v as "all" | "user")}>
@@ -136,7 +115,6 @@ const AdminNotifications = () => {
                 </Select>
               </div>
             </div>
-
             {targetType === "user" && (
               <div className="space-y-1.5">
                 <Label>{t("notif_admin_select_user")}</Label>
@@ -150,7 +128,6 @@ const AdminNotifications = () => {
                 </Select>
               </div>
             )}
-
             <Button onClick={handleSend} disabled={sending} className="w-full">
               <Send className="h-4 w-4 mr-2" />
               {sending ? t("notif_admin_sending") : t("notif_admin_send")}
@@ -158,7 +135,6 @@ const AdminNotifications = () => {
           </CardContent>
         </Card>
 
-        {/* History */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">{t("notif_admin_history")}</CardTitle>
