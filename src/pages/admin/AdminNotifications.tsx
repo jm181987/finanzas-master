@@ -44,15 +44,31 @@ const AdminNotifications = () => {
   const handleSend = async () => {
     if (!title.trim() || !body.trim()) { toast.error(t("notif_admin_error_empty")); return; }
     setSending(true);
+    const target = targetType === "user" && targetUserId ? targetUserId : null;
     const { error } = await notificationsTable().insert({
       title: title.trim(),
       body: body.trim(),
       type,
       created_by: user?.id,
-      target_user_id: targetType === "user" && targetUserId ? targetUserId : null,
+      target_user_id: target,
     });
+    if (error) { setSending(false); toast.error("Error: " + error.message); return; }
+
+    // Also send native push via FCM
+    try {
+      const { data: pushResult, error: pushError } = await supabase.functions.invoke("send-push", {
+        body: { title: title.trim(), body: body.trim(), target_user_id: target },
+      });
+      if (pushError) {
+        console.warn("FCM push failed:", pushError);
+      } else if (pushResult?.sent > 0) {
+        toast.success(`Push enviado a ${pushResult.sent} dispositivo(s)`);
+      }
+    } catch (e) {
+      console.warn("FCM push error:", e);
+    }
+
     setSending(false);
-    if (error) { toast.error("Error: " + error.message); return; }
     toast.success(t("notif_admin_sent"));
     setTitle(""); setBody("");
     loadHistory();
