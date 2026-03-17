@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, Tag, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, Tag, ArrowLeft, Bell } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
