@@ -199,6 +199,29 @@ const AdminCourseContent = () => {
     finally { setUploadingPdf(false); }
   };
 
+  const handlePdfUploadPt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") { toast.error(t("admin_content_pdf_only")); return; }
+    setUploadingPdfPt(true);
+    try {
+      const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `courses/${id}/pt-${Date.now()}-${fileName}`;
+      const { error } = await supabase.storage.from("course-files").upload(path, file, {
+        contentType: "application/pdf",
+        upsert: false,
+      });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("course-files").getPublicUrl(path);
+      setLessonForm((f) => ({ ...f, pdf_url_pt: urlData.publicUrl }));
+      toast.success(t("admin_content_pdf_uploaded"));
+    } catch (err: any) {
+      console.error("PDF PT upload error:", err);
+      toast.error(err?.message || t("admin_content_pdf_error"));
+    }
+    finally { setUploadingPdfPt(false); }
+  };
+
   const saveLesson = async () => {
     if (!lessonForm.title.trim()) { toast.error(t("admin_content_title_required")); return; }
     setSavingLesson(true);
