@@ -391,7 +391,7 @@ const AdminCourseContent = () => {
         </DialogContent>
       </Dialog>
 
-
+      <Dialog open={moduleDialog} onOpenChange={setModuleDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingModule ? t("admin_content_edit_module") : t("admin_content_new_module_title")}</DialogTitle>
