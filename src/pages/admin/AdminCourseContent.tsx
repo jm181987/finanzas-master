@@ -66,7 +66,7 @@ const AdminCourseContent = () => {
     if (!id) return;
     setLoading(true);
     try {
-      const { data: courseData } = await supabase.from("courses").select("id, title").eq("id", id).single();
+      const { data: courseData } = await supabase.from("courses").select("id, title, author_id").eq("id", id).single();
       setCourse(courseData);
       const { data: modulesData } = await supabase.from("modules").select("*").eq("course_id", id).order("sort_order");
       const mods = modulesData || [];
