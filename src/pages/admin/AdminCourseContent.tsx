@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,15 +12,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Trash2, GripVertical, Video, FileText, AlignLeft, ChevronDown, ChevronRight, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, GripVertical, Video, FileText, AlignLeft, ChevronDown, ChevronRight, Upload, Users, X, Search } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 
-interface Course { id: string; title: string; }
+interface Course { id: string; title: string; author_id: string; }
 interface Module { id: string; course_id: string; title: string; description: string | null; sort_order: number; }
 interface Lesson {
   id: string; module_id: string; title: string; content_type: string; content_text: string | null;
   video_url: string | null; pdf_url: string | null; sort_order: number; duration_minutes: number; is_free_preview: boolean;
 }
+interface Collaborator { id: string; user_id: string; full_name: string | null; created_at: string; }
+interface UserOption { id: string; full_name: string | null; }
 
 const contentTypeIcon = { video: Video, pdf: FileText, text: AlignLeft };
 const contentTypeLabel = { video: "Video", pdf: "PDF", text: "Texto" };
@@ -31,6 +34,7 @@ const AdminCourseContent = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user, role } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [lessons, setLessons] = useState<Record<string, Lesson[]>>({});
@@ -49,11 +53,20 @@ const AdminCourseContent = () => {
   const [savingLesson, setSavingLesson] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
 
+  // Collaborator state
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [collabDialogOpen, setCollabDialogOpen] = useState(false);
+  const [collabSearch, setCollabSearch] = useState("");
+  const [userOptions, setUserOptions] = useState<UserOption[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+
+  const canManageCollabs = role === "admin" || (course && user && course.author_id === user.id);
+
   const fetchData = async () => {
     if (!id) return;
     setLoading(true);
     try {
-      const { data: courseData } = await supabase.from("courses").select("id, title").eq("id", id).single();
+      const { data: courseData } = await supabase.from("courses").select("id, title, author_id").eq("id", id).single();
       setCourse(courseData);
       const { data: modulesData } = await supabase.from("modules").select("*").eq("course_id", id).order("sort_order");
       const mods = modulesData || [];
@@ -76,7 +89,52 @@ const AdminCourseContent = () => {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, [id]);
+  useEffect(() => { fetchData(); fetchCollaborators(); }, [id]);
+
+  // --- Collaborator management ---
+  const fetchCollaborators = useCallback(async () => {
+    if (!id) return;
+    const { data } = await (supabase as any).from("course_collaborators").select("id, user_id, created_at").eq("course_id", id);
+    if (!data || data.length === 0) { setCollaborators([]); return; }
+    const userIds = data.map((c: any) => c.user_id);
+    const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", userIds);
+    const nameMap: Record<string, string | null> = {};
+    (profiles || []).forEach((p: any) => { nameMap[p.id] = p.full_name; });
+    setCollaborators(data.map((c: any) => ({ ...c, full_name: nameMap[c.user_id] || null })));
+  }, [id]);
+
+  const searchUsers = useCallback(async (q: string) => {
+    if (q.length < 2) { setUserOptions([]); return; }
+    setSearchingUsers(true);
+    const { data } = await supabase.from("profiles").select("id, full_name").ilike("full_name", `%${q}%`).limit(10);
+    const existingIds = new Set(collaborators.map((c) => c.user_id));
+    if (course) existingIds.add(course.author_id);
+    setUserOptions((data || []).filter((u: any) => !existingIds.has(u.id)));
+    setSearchingUsers(false);
+  }, [collaborators, course]);
+
+  const addCollaborator = async (userId: string) => {
+    if (!id || !user) return;
+    const { error } = await (supabase as any).from("course_collaborators").insert({ course_id: id, user_id: userId, added_by: user.id });
+    if (error) {
+      if (error.code === "23505") toast.error(t("collab_already"));
+      else toast.error(t("collab_error"));
+      return;
+    }
+    toast.success(t("collab_added"));
+    setCollabDialogOpen(false);
+    setCollabSearch("");
+    setUserOptions([]);
+    fetchCollaborators();
+  };
+
+  const removeCollaborator = async (collabId: string) => {
+    if (!confirm(t("collab_remove_confirm"))) return;
+    const { error } = await (supabase as any).from("course_collaborators").delete().eq("id", collabId);
+    if (error) { toast.error(t("collab_error")); return; }
+    toast.success(t("collab_removed"));
+    fetchCollaborators();
+  };
 
   const openAddModule = () => { setEditingModule(null); setModuleForm({ title: "", description: "" }); setModuleDialog(true); };
   const openEditModule = (mod: Module) => { setEditingModule(mod); setModuleForm({ title: mod.title, description: mod.description || "" }); setModuleDialog(true); };
@@ -255,6 +313,83 @@ const AdminCourseContent = () => {
           })}
         </div>
       )}
+
+      {/* Collaborators Section */}
+      {canManageCollabs && (
+        <Card>
+          <CardHeader className="py-3 px-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-base font-semibold font-sans">{t("collab_title")}</CardTitle>
+                <Badge variant="outline" className="text-xs">{collaborators.length}</Badge>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => { setCollabDialogOpen(true); setCollabSearch(""); setUserOptions([]); }}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> {t("collab_add")}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0 pb-3 px-4">
+            {collaborators.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">{t("collab_empty")}</p>
+            ) : (
+              <div className="space-y-2">
+                {collaborators.map((c) => (
+                  <div key={c.id} className="flex items-center gap-3 p-2 rounded-md bg-muted/50 group">
+                    <div className="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center text-xs font-semibold text-secondary">
+                      {(c.full_name || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.full_name || c.user_id}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive h-7 px-2" onClick={() => removeCollaborator(c.id)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Add Collaborator Dialog */}
+      <Dialog open={collabDialogOpen} onOpenChange={setCollabDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("collab_add")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("collab_search")}
+                value={collabSearch}
+                onChange={(e) => { setCollabSearch(e.target.value); searchUsers(e.target.value); }}
+                className="pl-9"
+              />
+            </div>
+            <div className="max-h-60 overflow-y-auto space-y-1">
+              {searchingUsers && <p className="text-sm text-muted-foreground text-center py-2">...</p>}
+              {!searchingUsers && collabSearch.length >= 2 && userOptions.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">{t("admin_content_no_modules")}</p>
+              )}
+              {userOptions.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => addCollaborator(u.id)}
+                  className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors text-left"
+                >
+                  <div className="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center text-xs font-semibold text-secondary">
+                    {(u.full_name || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium">{u.full_name || u.id}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={moduleDialog} onOpenChange={setModuleDialog}>
         <DialogContent className="max-w-md">

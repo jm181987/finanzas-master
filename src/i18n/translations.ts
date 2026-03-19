@@ -454,6 +454,17 @@ export const translations = {
   notif_target_all: { es: "Todos", pt: "Todos" },
   notif_target_user: { es: "Usuario específico", pt: "Usuário específico" },
   admin_nav_notifications: { es: "Notificaciones", pt: "Notificações" },
+  collab_title: { es: "Colaboradores", pt: "Colaboradores" },
+  collab_add: { es: "Agregar colaborador", pt: "Adicionar colaborador" },
+  collab_empty: { es: "Sin colaboradores asignados", pt: "Sem colaboradores atribuídos" },
+  collab_select_user: { es: "Seleccionar usuario", pt: "Selecionar usuário" },
+  collab_search: { es: "Buscar por nombre...", pt: "Buscar por nome..." },
+  collab_added: { es: "Colaborador agregado", pt: "Colaborador adicionado" },
+  collab_removed: { es: "Colaborador eliminado", pt: "Colaborador removido" },
+  collab_error: { es: "Error al gestionar colaborador", pt: "Erro ao gerenciar colaborador" },
+  collab_already: { es: "Este usuario ya es colaborador", pt: "Este usuário já é colaborador" },
+  collab_remove: { es: "Eliminar", pt: "Remover" },
+  collab_remove_confirm: { es: "¿Eliminar este colaborador?", pt: "Remover este colaborador?" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
