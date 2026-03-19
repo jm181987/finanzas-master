@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,15 +12,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Pencil, Trash2, GripVertical, Video, FileText, AlignLeft, ChevronDown, ChevronRight, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, GripVertical, Video, FileText, AlignLeft, ChevronDown, ChevronRight, Upload, Users, X, Search } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 
-interface Course { id: string; title: string; }
+interface Course { id: string; title: string; author_id: string; }
 interface Module { id: string; course_id: string; title: string; description: string | null; sort_order: number; }
 interface Lesson {
   id: string; module_id: string; title: string; content_type: string; content_text: string | null;
   video_url: string | null; pdf_url: string | null; sort_order: number; duration_minutes: number; is_free_preview: boolean;
 }
+interface Collaborator { id: string; user_id: string; full_name: string | null; created_at: string; }
+interface UserOption { id: string; full_name: string | null; }
 
 const contentTypeIcon = { video: Video, pdf: FileText, text: AlignLeft };
 const contentTypeLabel = { video: "Video", pdf: "PDF", text: "Texto" };
@@ -31,6 +34,7 @@ const AdminCourseContent = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user, role } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [lessons, setLessons] = useState<Record<string, Lesson[]>>({});
@@ -48,6 +52,15 @@ const AdminCourseContent = () => {
   const [lessonForm, setLessonForm] = useState({ ...EMPTY_LESSON });
   const [savingLesson, setSavingLesson] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+
+  // Collaborator state
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [collabDialogOpen, setCollabDialogOpen] = useState(false);
+  const [collabSearch, setCollabSearch] = useState("");
+  const [userOptions, setUserOptions] = useState<UserOption[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+
+  const canManageCollabs = role === "admin" || (course && user && course.author_id === user.id);
 
   const fetchData = async () => {
     if (!id) return;
