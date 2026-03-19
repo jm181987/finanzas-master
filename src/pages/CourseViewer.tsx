@@ -116,11 +116,22 @@ const CourseViewer = () => {
         .single();
 
       const raw = courseData as any;
+
+      // Fetch collaborator names
+      const { data: collabs } = await (supabase as any).from("course_collaborators").select("user_id").eq("course_id", raw.id);
+      let collabNames: string[] = [];
+      if (collabs && collabs.length > 0) {
+        const collabIds = collabs.map((c: any) => c.user_id);
+        const { data: collabProfiles } = await supabase.from("profiles").select("id, full_name").in("id", collabIds);
+        collabNames = (collabProfiles || []).map((p: any) => p.full_name).filter(Boolean);
+      }
+      const allNames = [profile?.full_name || "Instructor", ...collabNames].join(", ");
+
       setCourse({
         id: raw.id, title: raw.title, title_pt: raw.title_pt || null,
         description: raw.description, description_pt: raw.description_pt || null,
         image_url: raw.image_url, is_free: raw.is_free, price: raw.price,
-        author_name: profile?.full_name || "Instructor",
+        author_name: allNames,
       });
 
       // Check enrollment — auto-enroll if course is free
