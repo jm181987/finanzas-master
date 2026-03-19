@@ -52,6 +52,7 @@ const AdminCourseContent = () => {
   const [lessonForm, setLessonForm] = useState({ ...EMPTY_LESSON });
   const [savingLesson, setSavingLesson] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [uploadingPdfPt, setUploadingPdfPt] = useState(false);
 
   // Collaborator state
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
