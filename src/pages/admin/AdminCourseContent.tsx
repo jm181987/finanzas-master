@@ -165,7 +165,7 @@ const AdminCourseContent = () => {
   const openAddLesson = (modId: string) => { setEditingLesson(null); setActiveModuleId(modId); setLessonForm({ ...EMPTY_LESSON }); setLessonDialog(true); };
   const openEditLesson = (lesson: Lesson) => {
     setEditingLesson(lesson); setActiveModuleId(lesson.module_id);
-    setLessonForm({ title: lesson.title, content_type: lesson.content_type, content_text: lesson.content_text || "", video_url: lesson.video_url || "", pdf_url: lesson.pdf_url || "", duration_minutes: lesson.duration_minutes, is_free_preview: lesson.is_free_preview });
+    setLessonForm({ title: lesson.title, content_type: lesson.content_type, content_text: lesson.content_text || "", video_url: lesson.video_url || "", pdf_url: lesson.pdf_url || "", pdf_url_pt: (lesson as any).pdf_url_pt || "", duration_minutes: lesson.duration_minutes, is_free_preview: lesson.is_free_preview });
     setLessonDialog(true);
   };
   const deleteLesson = async (lessonId: string, modId: string) => {
