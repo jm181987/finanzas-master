@@ -94,7 +94,7 @@ const AdminCourseContent = () => {
   // --- Collaborator management ---
   const fetchCollaborators = useCallback(async () => {
     if (!id) return;
-    const { data } = await supabase.from("course_collaborators").select("id, user_id, created_at").eq("course_id", id);
+    const { data } = await (supabase as any).from("course_collaborators").select("id, user_id, created_at").eq("course_id", id);
     if (!data || data.length === 0) { setCollaborators([]); return; }
     const userIds = data.map((c: any) => c.user_id);
     const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", userIds);
