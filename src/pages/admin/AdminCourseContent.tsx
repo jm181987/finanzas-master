@@ -314,7 +314,84 @@ const AdminCourseContent = () => {
         </div>
       )}
 
-      <Dialog open={moduleDialog} onOpenChange={setModuleDialog}>
+      {/* Collaborators Section */}
+      {canManageCollabs && (
+        <Card>
+          <CardHeader className="py-3 px-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-base font-semibold font-sans">{t("collab_title")}</CardTitle>
+                <Badge variant="outline" className="text-xs">{collaborators.length}</Badge>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => { setCollabDialogOpen(true); setCollabSearch(""); setUserOptions([]); }}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> {t("collab_add")}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0 pb-3 px-4">
+            {collaborators.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">{t("collab_empty")}</p>
+            ) : (
+              <div className="space-y-2">
+                {collaborators.map((c) => (
+                  <div key={c.id} className="flex items-center gap-3 p-2 rounded-md bg-muted/50 group">
+                    <div className="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center text-xs font-semibold text-secondary">
+                      {(c.full_name || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.full_name || c.user_id}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive h-7 px-2" onClick={() => removeCollaborator(c.id)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Add Collaborator Dialog */}
+      <Dialog open={collabDialogOpen} onOpenChange={setCollabDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("collab_add")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("collab_search")}
+                value={collabSearch}
+                onChange={(e) => { setCollabSearch(e.target.value); searchUsers(e.target.value); }}
+                className="pl-9"
+              />
+            </div>
+            <div className="max-h-60 overflow-y-auto space-y-1">
+              {searchingUsers && <p className="text-sm text-muted-foreground text-center py-2">...</p>}
+              {!searchingUsers && collabSearch.length >= 2 && userOptions.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">{t("admin_content_no_modules")}</p>
+              )}
+              {userOptions.map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => addCollaborator(u.id)}
+                  className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors text-left"
+                >
+                  <div className="h-8 w-8 rounded-full bg-secondary/20 flex items-center justify-center text-xs font-semibold text-secondary">
+                    {(u.full_name || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium">{u.full_name || u.id}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingModule ? t("admin_content_edit_module") : t("admin_content_new_module_title")}</DialogTitle>
