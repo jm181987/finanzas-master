@@ -35,6 +35,7 @@ interface Lesson {
   content_text: string | null;
   content_text_pt: string | null;
   pdf_url: string | null;
+  pdf_url_pt?: string | null;
   duration_minutes: number | null;
   is_free_preview: boolean;
   sort_order: number;
