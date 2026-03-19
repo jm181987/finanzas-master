@@ -123,13 +123,20 @@ const AdminCourseContent = () => {
     if (file.type !== "application/pdf") { toast.error(t("admin_content_pdf_only")); return; }
     setUploadingPdf(true);
     try {
-      const path = `courses/${id}/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from("course-files").upload(path, file);
+      const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `courses/${id}/${Date.now()}-${fileName}`;
+      const { error } = await supabase.storage.from("course-files").upload(path, file, {
+        contentType: "application/pdf",
+        upsert: false,
+      });
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("course-files").getPublicUrl(path);
       setLessonForm((f) => ({ ...f, pdf_url: urlData.publicUrl }));
       toast.success(t("admin_content_pdf_uploaded"));
-    } catch { toast.error(t("admin_content_pdf_error")); }
+    } catch (err: any) {
+      console.error("PDF upload error:", err);
+      toast.error(err?.message || t("admin_content_pdf_error"));
+    }
     finally { setUploadingPdf(false); }
   };
 
