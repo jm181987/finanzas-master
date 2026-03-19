@@ -89,7 +89,52 @@ const AdminCourseContent = () => {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, [id]);
+  useEffect(() => { fetchData(); fetchCollaborators(); }, [id]);
+
+  // --- Collaborator management ---
+  const fetchCollaborators = useCallback(async () => {
+    if (!id) return;
+    const { data } = await supabase.from("course_collaborators").select("id, user_id, created_at").eq("course_id", id);
+    if (!data || data.length === 0) { setCollaborators([]); return; }
+    const userIds = data.map((c: any) => c.user_id);
+    const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", userIds);
+    const nameMap: Record<string, string | null> = {};
+    (profiles || []).forEach((p: any) => { nameMap[p.id] = p.full_name; });
+    setCollaborators(data.map((c: any) => ({ ...c, full_name: nameMap[c.user_id] || null })));
+  }, [id]);
+
+  const searchUsers = useCallback(async (q: string) => {
+    if (q.length < 2) { setUserOptions([]); return; }
+    setSearchingUsers(true);
+    const { data } = await supabase.from("profiles").select("id, full_name").ilike("full_name", `%${q}%`).limit(10);
+    const existingIds = new Set(collaborators.map((c) => c.user_id));
+    if (course) existingIds.add(course.author_id);
+    setUserOptions((data || []).filter((u: any) => !existingIds.has(u.id)));
+    setSearchingUsers(false);
+  }, [collaborators, course]);
+
+  const addCollaborator = async (userId: string) => {
+    if (!id || !user) return;
+    const { error } = await supabase.from("course_collaborators").insert({ course_id: id, user_id: userId, added_by: user.id } as any);
+    if (error) {
+      if (error.code === "23505") toast.error(t("collab_already"));
+      else toast.error(t("collab_error"));
+      return;
+    }
+    toast.success(t("collab_added"));
+    setCollabDialogOpen(false);
+    setCollabSearch("");
+    setUserOptions([]);
+    fetchCollaborators();
+  };
+
+  const removeCollaborator = async (collabId: string) => {
+    if (!confirm(t("collab_remove_confirm"))) return;
+    const { error } = await supabase.from("course_collaborators").delete().eq("id", collabId);
+    if (error) { toast.error(t("collab_error")); return; }
+    toast.success(t("collab_removed"));
+    fetchCollaborators();
+  };
 
   const openAddModule = () => { setEditingModule(null); setModuleForm({ title: "", description: "" }); setModuleDialog(true); };
   const openEditModule = (mod: Module) => { setEditingModule(mod); setModuleForm({ title: mod.title, description: mod.description || "" }); setModuleDialog(true); };
