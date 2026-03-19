@@ -470,38 +470,40 @@ const AdminCourseContent = () => {
               </div>
             )}
             {lessonForm.content_type === "pdf" && (
-              <div className="space-y-1.5">
-                <Label>{t("admin_content_pdf_file")}</Label>
-                {lessonForm.pdf_url ? (
-                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                    <FileText className="h-4 w-4 text-secondary" />
-                    <span className="text-sm text-muted-foreground flex-1 truncate">{lessonForm.pdf_url.split("/").pop()}</span>
-                    <Button variant="ghost" size="sm" onClick={() => setLessonForm((f) => ({ ...f, pdf_url: "" }))}>{t("admin_content_pdf_change")}</Button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-border rounded-md cursor-pointer hover:border-muted-foreground transition-colors">
-                    <Upload className="h-6 w-6 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{uploadingPdf ? t("admin_content_pdf_uploading") : t("admin_content_pdf_click")}</span>
-                    <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
-                  </label>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label>PDF Traducido (PT) <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-                {lessonForm.pdf_url_pt ? (
-                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                    <FileText className="h-4 w-4 text-gold" />
-                    <span className="text-sm text-muted-foreground flex-1 truncate">{lessonForm.pdf_url_pt.split("/").pop()}</span>
-                    <Button variant="ghost" size="sm" onClick={() => setLessonForm((f) => ({ ...f, pdf_url_pt: "" }))}>{t("admin_content_pdf_change")}</Button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-border rounded-md cursor-pointer hover:border-muted-foreground transition-colors">
-                    <Upload className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{uploadingPdfPt ? t("admin_content_pdf_uploading") : "Subir PDF en portugués"}</span>
-                    <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUploadPt} disabled={uploadingPdfPt} />
-                  </label>
-                )}
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <Label>{t("admin_content_pdf_file")}</Label>
+                  {lessonForm.pdf_url ? (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <FileText className="h-4 w-4 text-secondary" />
+                      <span className="text-sm text-muted-foreground flex-1 truncate">{lessonForm.pdf_url.split("/").pop()}</span>
+                      <Button variant="ghost" size="sm" onClick={() => setLessonForm((f) => ({ ...f, pdf_url: "" }))}>{t("admin_content_pdf_change")}</Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-border rounded-md cursor-pointer hover:border-muted-foreground transition-colors">
+                      <Upload className="h-6 w-6 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">{uploadingPdf ? t("admin_content_pdf_uploading") : t("admin_content_pdf_click")}</span>
+                      <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
+                    </label>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>PDF Traducido (PT) <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                  {lessonForm.pdf_url_pt ? (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <FileText className="h-4 w-4 text-gold" />
+                      <span className="text-sm text-muted-foreground flex-1 truncate">{lessonForm.pdf_url_pt.split("/").pop()}</span>
+                      <Button variant="ghost" size="sm" onClick={() => setLessonForm((f) => ({ ...f, pdf_url_pt: "" }))}>{t("admin_content_pdf_change")}</Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-border rounded-md cursor-pointer hover:border-muted-foreground transition-colors">
+                      <Upload className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{uploadingPdfPt ? t("admin_content_pdf_uploading") : "Subir PDF en portugués"}</span>
+                      <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUploadPt} disabled={uploadingPdfPt} />
+                    </label>
+                  )}
+                </div>
+              </>
             )}
             {lessonForm.content_type === "text" && (
               <div className="space-y-1.5">
