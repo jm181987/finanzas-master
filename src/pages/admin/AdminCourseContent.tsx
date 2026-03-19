@@ -115,7 +115,7 @@ const AdminCourseContent = () => {
 
   const addCollaborator = async (userId: string) => {
     if (!id || !user) return;
-    const { error } = await supabase.from("course_collaborators").insert({ course_id: id, user_id: userId, added_by: user.id } as any);
+    const { error } = await (supabase as any).from("course_collaborators").insert({ course_id: id, user_id: userId, added_by: user.id });
     if (error) {
       if (error.code === "23505") toast.error(t("collab_already"));
       else toast.error(t("collab_error"));
