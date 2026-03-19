@@ -20,7 +20,7 @@ interface Course { id: string; title: string; author_id: string; }
 interface Module { id: string; course_id: string; title: string; description: string | null; sort_order: number; }
 interface Lesson {
   id: string; module_id: string; title: string; content_type: string; content_text: string | null;
-  video_url: string | null; pdf_url: string | null; sort_order: number; duration_minutes: number; is_free_preview: boolean;
+  video_url: string | null; pdf_url: string | null; pdf_url_pt: string | null; sort_order: number; duration_minutes: number; is_free_preview: boolean;
 }
 interface Collaborator { id: string; user_id: string; full_name: string | null; created_at: string; }
 interface UserOption { id: string; full_name: string | null; }
