@@ -28,7 +28,7 @@ interface UserOption { id: string; full_name: string | null; }
 const contentTypeIcon = { video: Video, pdf: FileText, text: AlignLeft };
 const contentTypeLabel = { video: "Video", pdf: "PDF", text: "Texto" };
 
-const EMPTY_LESSON = { title: "", content_type: "video", content_text: "", video_url: "", pdf_url: "", duration_minutes: 0, is_free_preview: false };
+const EMPTY_LESSON = { title: "", content_type: "video", content_text: "", video_url: "", pdf_url: "", pdf_url_pt: "", duration_minutes: 0, is_free_preview: false };
 
 const AdminCourseContent = () => {
   const { id } = useParams<{ id: string }>();
