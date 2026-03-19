@@ -558,11 +558,14 @@ const CourseViewer = () => {
               )}
 
               {/* PDF */}
-              {activeLesson.content_type === "pdf" && activeLesson.pdf_url && (
-                <div className="mb-8">
-                  <iframe src={activeLesson.pdf_url} className="w-full h-[70vh] rounded-2xl border border-border" title={activeLesson.title} />
-                </div>
-              )}
+              {activeLesson.content_type === "pdf" && activeLesson.pdf_url && (() => {
+                const pdfSrc = lang === "pt" && activeLesson.pdf_url_pt ? activeLesson.pdf_url_pt : activeLesson.pdf_url;
+                return (
+                  <div className="mb-8">
+                    <iframe src={pdfSrc} className="w-full h-[70vh] rounded-2xl border border-border" title={activeLesson.title} />
+                  </div>
+                );
+              })()}
 
               {/* Lesson header */}
               <div className="flex items-start justify-between gap-4 mb-6">
