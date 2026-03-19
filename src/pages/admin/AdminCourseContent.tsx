@@ -211,11 +211,11 @@ const AdminCourseContent = () => {
         duration_minutes: Number(lessonForm.duration_minutes) || 0, is_free_preview: lessonForm.is_free_preview,
       };
       if (editingLesson) {
-        await supabase.from("lessons").update(payload).eq("id", editingLesson.id);
+        await supabase.from("lessons").update(payload as any).eq("id", editingLesson.id);
         toast.success(t("admin_content_lesson_updated"));
       } else {
         const sort_order = (lessons[activeModuleId] || []).length;
-        await supabase.from("lessons").insert({ ...payload, module_id: activeModuleId, sort_order });
+        await supabase.from("lessons").insert({ ...payload, module_id: activeModuleId, sort_order } as any);
         toast.success(t("admin_content_lesson_created"));
       }
       setLessonDialog(false);
