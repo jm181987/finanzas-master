@@ -202,11 +202,12 @@ const AdminCourseContent = () => {
     if (!lessonForm.title.trim()) { toast.error(t("admin_content_title_required")); return; }
     setSavingLesson(true);
     try {
-      const payload = {
+      const payload: Record<string, any> = {
         title: lessonForm.title.trim(), content_type: lessonForm.content_type,
         content_text: lessonForm.content_type === "text" ? lessonForm.content_text || null : null,
         video_url: lessonForm.content_type === "video" ? lessonForm.video_url || null : null,
         pdf_url: lessonForm.content_type === "pdf" ? lessonForm.pdf_url || null : null,
+        pdf_url_pt: lessonForm.content_type === "pdf" ? lessonForm.pdf_url_pt || null : null,
         duration_minutes: Number(lessonForm.duration_minutes) || 0, is_free_preview: lessonForm.is_free_preview,
       };
       if (editingLesson) {
