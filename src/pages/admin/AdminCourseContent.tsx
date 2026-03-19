@@ -130,7 +130,7 @@ const AdminCourseContent = () => {
 
   const removeCollaborator = async (collabId: string) => {
     if (!confirm(t("collab_remove_confirm"))) return;
-    const { error } = await supabase.from("course_collaborators").delete().eq("id", collabId);
+    const { error } = await (supabase as any).from("course_collaborators").delete().eq("id", collabId);
     if (error) { toast.error(t("collab_error")); return; }
     toast.success(t("collab_removed"));
     fetchCollaborators();
