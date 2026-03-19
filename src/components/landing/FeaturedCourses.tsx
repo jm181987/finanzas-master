@@ -80,18 +80,38 @@ const FeaturedCourses = () => {
           .eq("role", "instructor");
         const instructorIds = new Set((instructorRoles || []).map((r: any) => r.user_id));
 
-        const allCourses = rawRows.map((c: any) => ({
-          id: c.id, title: c.title, title_pt: c.title_pt || null,
-          short_description: c.short_description, short_description_pt: c.short_description_pt || null,
-          image_url: c.image_url, is_free: c.is_free, price: c.price,
-          average_rating: c.average_rating || 0, total_students: c.total_students || 0,
-          is_featured: c.is_featured,
-          author_name: authorMap[c.author_id] || "Instructor",
-          author_id: c.author_id,
-          category_name: c.categories?.name || "General",
-          category_name_pt: c.categories?.name_pt || null,
-          lesson_count: lessonCounts[c.id] || 0,
-        }));
+        // Fetch collaborators
+        let collabMap: Record<string, string[]> = {};
+        if (courseIds.length > 0) {
+          const { data: collabs } = await (supabase as any).from("course_collaborators").select("course_id, user_id").in("course_id", courseIds);
+          if (collabs && collabs.length > 0) {
+            const collabUserIds = [...new Set((collabs as any[]).map((c: any) => c.user_id))];
+            const { data: collabProfiles } = await supabase.from("profiles").select("id, full_name").in("id", collabUserIds);
+            const collabNameMap: Record<string, string> = {};
+            for (const p of collabProfiles || []) collabNameMap[p.id] = p.full_name || "Colaborador";
+            for (const c of collabs as any[]) {
+              if (!collabMap[c.course_id]) collabMap[c.course_id] = [];
+              const name = collabNameMap[c.user_id];
+              if (name) collabMap[c.course_id].push(name);
+            }
+          }
+        }
+
+        const allCourses = rawRows.map((c: any) => {
+          const names = [authorMap[c.author_id] || "Instructor", ...(collabMap[c.id] || [])];
+          return {
+            id: c.id, title: c.title, title_pt: c.title_pt || null,
+            short_description: c.short_description, short_description_pt: c.short_description_pt || null,
+            image_url: c.image_url, is_free: c.is_free, price: c.price,
+            average_rating: c.average_rating || 0, total_students: c.total_students || 0,
+            is_featured: c.is_featured,
+            author_name: names.join(", "),
+            author_id: c.author_id,
+            category_name: c.categories?.name || "General",
+            category_name_pt: c.categories?.name_pt || null,
+            lesson_count: lessonCounts[c.id] || 0,
+          };
+        });
 
         setCourses(allCourses);
         setInstructorAuthorIds(instructorIds);
