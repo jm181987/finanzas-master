@@ -35,6 +35,7 @@ interface Lesson {
   content_text: string | null;
   content_text_pt: string | null;
   pdf_url: string | null;
+  pdf_url_pt?: string | null;
   duration_minutes: number | null;
   is_free_preview: boolean;
   sort_order: number;
@@ -199,7 +200,7 @@ const CourseViewer = () => {
             id: l.id, title: l.title, title_pt: l.title_pt || null,
             content_type: l.content_type, video_url: l.video_url,
             content_text: l.content_text, content_text_pt: l.content_text_pt || null,
-            pdf_url: l.pdf_url, duration_minutes: l.duration_minutes,
+            pdf_url: l.pdf_url, pdf_url_pt: l.pdf_url_pt || null, duration_minutes: l.duration_minutes,
             is_free_preview: l.is_free_preview, sort_order: l.sort_order,
             completed: completed.has(l.id),
           })),
@@ -557,11 +558,14 @@ const CourseViewer = () => {
               )}
 
               {/* PDF */}
-              {activeLesson.content_type === "pdf" && activeLesson.pdf_url && (
-                <div className="mb-8">
-                  <iframe src={activeLesson.pdf_url} className="w-full h-[70vh] rounded-2xl border border-border" title={activeLesson.title} />
-                </div>
-              )}
+              {activeLesson.content_type === "pdf" && activeLesson.pdf_url && (() => {
+                const pdfSrc = lang === "pt" && activeLesson.pdf_url_pt ? activeLesson.pdf_url_pt : activeLesson.pdf_url;
+                return (
+                  <div className="mb-8">
+                    <iframe src={pdfSrc} className="w-full h-[70vh] rounded-2xl border border-border" title={activeLesson.title} />
+                  </div>
+                );
+              })()}
 
               {/* Lesson header */}
               <div className="flex items-start justify-between gap-4 mb-6">

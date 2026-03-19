@@ -20,7 +20,7 @@ interface Course { id: string; title: string; author_id: string; }
 interface Module { id: string; course_id: string; title: string; description: string | null; sort_order: number; }
 interface Lesson {
   id: string; module_id: string; title: string; content_type: string; content_text: string | null;
-  video_url: string | null; pdf_url: string | null; sort_order: number; duration_minutes: number; is_free_preview: boolean;
+  video_url: string | null; pdf_url: string | null; pdf_url_pt?: string | null; sort_order: number; duration_minutes: number; is_free_preview: boolean;
 }
 interface Collaborator { id: string; user_id: string; full_name: string | null; created_at: string; }
 interface UserOption { id: string; full_name: string | null; }
@@ -28,7 +28,7 @@ interface UserOption { id: string; full_name: string | null; }
 const contentTypeIcon = { video: Video, pdf: FileText, text: AlignLeft };
 const contentTypeLabel = { video: "Video", pdf: "PDF", text: "Texto" };
 
-const EMPTY_LESSON = { title: "", content_type: "video", content_text: "", video_url: "", pdf_url: "", duration_minutes: 0, is_free_preview: false };
+const EMPTY_LESSON = { title: "", content_type: "video", content_text: "", video_url: "", pdf_url: "", pdf_url_pt: "", duration_minutes: 0, is_free_preview: false };
 
 const AdminCourseContent = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +52,7 @@ const AdminCourseContent = () => {
   const [lessonForm, setLessonForm] = useState({ ...EMPTY_LESSON });
   const [savingLesson, setSavingLesson] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [uploadingPdfPt, setUploadingPdfPt] = useState(false);
 
   // Collaborator state
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -165,7 +166,7 @@ const AdminCourseContent = () => {
   const openAddLesson = (modId: string) => { setEditingLesson(null); setActiveModuleId(modId); setLessonForm({ ...EMPTY_LESSON }); setLessonDialog(true); };
   const openEditLesson = (lesson: Lesson) => {
     setEditingLesson(lesson); setActiveModuleId(lesson.module_id);
-    setLessonForm({ title: lesson.title, content_type: lesson.content_type, content_text: lesson.content_text || "", video_url: lesson.video_url || "", pdf_url: lesson.pdf_url || "", duration_minutes: lesson.duration_minutes, is_free_preview: lesson.is_free_preview });
+    setLessonForm({ title: lesson.title, content_type: lesson.content_type, content_text: lesson.content_text || "", video_url: lesson.video_url || "", pdf_url: lesson.pdf_url || "", pdf_url_pt: (lesson as any).pdf_url_pt || "", duration_minutes: lesson.duration_minutes, is_free_preview: lesson.is_free_preview });
     setLessonDialog(true);
   };
   const deleteLesson = async (lessonId: string, modId: string) => {
@@ -198,23 +199,47 @@ const AdminCourseContent = () => {
     finally { setUploadingPdf(false); }
   };
 
+  const handlePdfUploadPt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") { toast.error(t("admin_content_pdf_only")); return; }
+    setUploadingPdfPt(true);
+    try {
+      const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `courses/${id}/pt-${Date.now()}-${fileName}`;
+      const { error } = await supabase.storage.from("course-files").upload(path, file, {
+        contentType: "application/pdf",
+        upsert: false,
+      });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("course-files").getPublicUrl(path);
+      setLessonForm((f) => ({ ...f, pdf_url_pt: urlData.publicUrl }));
+      toast.success(t("admin_content_pdf_uploaded"));
+    } catch (err: any) {
+      console.error("PDF PT upload error:", err);
+      toast.error(err?.message || t("admin_content_pdf_error"));
+    }
+    finally { setUploadingPdfPt(false); }
+  };
+
   const saveLesson = async () => {
     if (!lessonForm.title.trim()) { toast.error(t("admin_content_title_required")); return; }
     setSavingLesson(true);
     try {
-      const payload = {
+      const payload: Record<string, any> = {
         title: lessonForm.title.trim(), content_type: lessonForm.content_type,
         content_text: lessonForm.content_type === "text" ? lessonForm.content_text || null : null,
         video_url: lessonForm.content_type === "video" ? lessonForm.video_url || null : null,
         pdf_url: lessonForm.content_type === "pdf" ? lessonForm.pdf_url || null : null,
+        pdf_url_pt: lessonForm.content_type === "pdf" ? lessonForm.pdf_url_pt || null : null,
         duration_minutes: Number(lessonForm.duration_minutes) || 0, is_free_preview: lessonForm.is_free_preview,
       };
       if (editingLesson) {
-        await supabase.from("lessons").update(payload).eq("id", editingLesson.id);
+        await supabase.from("lessons").update(payload as any).eq("id", editingLesson.id);
         toast.success(t("admin_content_lesson_updated"));
       } else {
         const sort_order = (lessons[activeModuleId] || []).length;
-        await supabase.from("lessons").insert({ ...payload, module_id: activeModuleId, sort_order });
+        await supabase.from("lessons").insert({ ...payload, module_id: activeModuleId, sort_order } as any);
         toast.success(t("admin_content_lesson_created"));
       }
       setLessonDialog(false);
@@ -445,22 +470,40 @@ const AdminCourseContent = () => {
               </div>
             )}
             {lessonForm.content_type === "pdf" && (
-              <div className="space-y-1.5">
-                <Label>{t("admin_content_pdf_file")}</Label>
-                {lessonForm.pdf_url ? (
-                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                    <FileText className="h-4 w-4 text-secondary" />
-                    <span className="text-sm text-muted-foreground flex-1 truncate">{lessonForm.pdf_url.split("/").pop()}</span>
-                    <Button variant="ghost" size="sm" onClick={() => setLessonForm((f) => ({ ...f, pdf_url: "" }))}>{t("admin_content_pdf_change")}</Button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-border rounded-md cursor-pointer hover:border-muted-foreground transition-colors">
-                    <Upload className="h-6 w-6 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{uploadingPdf ? t("admin_content_pdf_uploading") : t("admin_content_pdf_click")}</span>
-                    <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
-                  </label>
-                )}
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <Label>{t("admin_content_pdf_file")}</Label>
+                  {lessonForm.pdf_url ? (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <FileText className="h-4 w-4 text-secondary" />
+                      <span className="text-sm text-muted-foreground flex-1 truncate">{lessonForm.pdf_url.split("/").pop()}</span>
+                      <Button variant="ghost" size="sm" onClick={() => setLessonForm((f) => ({ ...f, pdf_url: "" }))}>{t("admin_content_pdf_change")}</Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-border rounded-md cursor-pointer hover:border-muted-foreground transition-colors">
+                      <Upload className="h-6 w-6 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">{uploadingPdf ? t("admin_content_pdf_uploading") : t("admin_content_pdf_click")}</span>
+                      <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} disabled={uploadingPdf} />
+                    </label>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>PDF Traducido (PT) <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                  {lessonForm.pdf_url_pt ? (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <FileText className="h-4 w-4 text-gold" />
+                      <span className="text-sm text-muted-foreground flex-1 truncate">{lessonForm.pdf_url_pt.split("/").pop()}</span>
+                      <Button variant="ghost" size="sm" onClick={() => setLessonForm((f) => ({ ...f, pdf_url_pt: "" }))}>{t("admin_content_pdf_change")}</Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-border rounded-md cursor-pointer hover:border-muted-foreground transition-colors">
+                      <Upload className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{uploadingPdfPt ? t("admin_content_pdf_uploading") : "Subir PDF en portugués"}</span>
+                      <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUploadPt} disabled={uploadingPdfPt} />
+                    </label>
+                  )}
+                </div>
+              </>
             )}
             {lessonForm.content_type === "text" && (
               <div className="space-y-1.5">
