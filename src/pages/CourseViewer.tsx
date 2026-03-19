@@ -200,7 +200,7 @@ const CourseViewer = () => {
             id: l.id, title: l.title, title_pt: l.title_pt || null,
             content_type: l.content_type, video_url: l.video_url,
             content_text: l.content_text, content_text_pt: l.content_text_pt || null,
-            pdf_url: l.pdf_url, duration_minutes: l.duration_minutes,
+            pdf_url: l.pdf_url, pdf_url_pt: l.pdf_url_pt || null, duration_minutes: l.duration_minutes,
             is_free_preview: l.is_free_preview, sort_order: l.sort_order,
             completed: completed.has(l.id),
           })),
