@@ -273,6 +273,7 @@ export type Database = {
           is_free_preview: boolean
           module_id: string
           pdf_url: string | null
+          pdf_url_pt: string | null
           sort_order: number
           title: string
           title_pt: string | null
@@ -289,6 +290,7 @@ export type Database = {
           is_free_preview?: boolean
           module_id: string
           pdf_url?: string | null
+          pdf_url_pt?: string | null
           sort_order?: number
           title: string
           title_pt?: string | null
@@ -305,6 +307,7 @@ export type Database = {
           is_free_preview?: boolean
           module_id?: string
           pdf_url?: string | null
+          pdf_url_pt?: string | null
           sort_order?: number
           title?: string
           title_pt?: string | null
