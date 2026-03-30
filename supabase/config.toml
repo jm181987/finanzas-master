@@ -8,3 +8,7 @@ verify_jwt = false
 
 [functions.send-push]
 verify_jwt = false
+
+[functions.receive-signal]
+verify_jwt = false
+
