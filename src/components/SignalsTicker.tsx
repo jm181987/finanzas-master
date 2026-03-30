@@ -140,7 +140,7 @@ const SignalsTicker = () => {
                   <div className="flex items-start gap-2 mb-1">
                     <div className="mt-0.5">{sentimentIcon(signal.sentiment)}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground leading-tight line-clamp-2">
+                      <p className="text-sm font-semibold text-gray-900 leading-tight line-clamp-2">
                         {getTitle(signal)}
                       </p>
                       {(signal.asset_name || signal.ticker) && (
