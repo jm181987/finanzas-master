@@ -41,18 +41,6 @@ const firstBoolean = (...values: unknown[]): boolean => {
 };
 
 const normalizeReasoning = (value: unknown): string | null => {
-
-const extractTickerFromBody = (body: string | null): string | null => {
-  if (!body) return null;
-  // Pattern: "Veja TICKER para mais" or "See TICKER for more"
-  const match = body.match(/(?:Veja|Vea|See)\s+([A-Z][A-Z0-9.]{0,9})\s+(?:para|for)/i);
-  if (match) return match[1].toUpperCase();
-  // Pattern: ticker-like word in parentheses e.g. (AAPL)
-  const paren = body.match(/\(([A-Z][A-Z0-9.]{0,9})\)/);
-  if (paren) return paren[1];
-  return null;
-};
-
   if (value === null || value === undefined) return null;
   if (typeof value === "string") return value.trim() || null;
   try {
@@ -60,6 +48,17 @@ const extractTickerFromBody = (body: string | null): string | null => {
   } catch {
     return String(value);
   }
+};
+
+const extractTickerFromBody = (body: string | null): string | null => {
+  if (!body) return null;
+  // Pattern: "Veja TICKER para mais" or "Go see TICKER for" or "Consulta TICKER para"
+  const match = body.match(/(?:Veja|Vea|See|Consulta|Go see)\s+([A-Z][A-Z0-9.]{0,9})\s+(?:para|for)/i);
+  if (match) return match[1].toUpperCase();
+  // Pattern: ticker-like word in parentheses e.g. (AAPL)
+  const paren = body.match(/\(([A-Z][A-Z0-9.]{0,9})\)/);
+  if (paren) return paren[1];
+  return null;
 };
 
 Deno.serve(async (req) => {
