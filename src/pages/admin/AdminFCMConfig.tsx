@@ -96,11 +96,11 @@ const AdminFCMConfig = () => {
       </div>
 
       {/* Status card */}
-      <Card className={isConfigured ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}>
+      <Card className={isConfigured ? "border-primary/30 bg-primary/5" : "border-destructive/30 bg-destructive/5"}>
         <CardContent className="flex items-center gap-3 py-4">
           {isConfigured ? (
             <>
-              <CheckCircle className="h-5 w-5 text-emerald-500" />
+              <CheckCircle className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm font-medium text-foreground">{t("fcm_status_active")}</p>
                 {parsedInfo && (
@@ -112,7 +112,7 @@ const AdminFCMConfig = () => {
             </>
           ) : (
             <>
-              <AlertCircle className="h-5 w-5 text-amber-500" />
+              <AlertCircle className="h-5 w-5 text-destructive" />
               <p className="text-sm font-medium text-foreground">{t("fcm_status_inactive")}</p>
             </>
           )}
