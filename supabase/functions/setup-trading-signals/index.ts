@@ -15,67 +15,88 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const sql = `
-    CREATE TABLE IF NOT EXISTS public.trading_signals (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      pair text NOT NULL,
-      direction text NOT NULL CHECK (direction IN ('buy', 'sell')),
-      entry_price numeric NOT NULL,
-      take_profit numeric,
-      stop_loss numeric,
-      status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'hit_tp', 'hit_sl', 'closed', 'expired')),
-      source text DEFAULT 'webhook',
-      notes text,
-      created_at timestamptz NOT NULL DEFAULT now(),
-      closed_at timestamptz
-    );
-
-    ALTER TABLE public.trading_signals ENABLE ROW LEVEL SECURITY;
-
-    DO $$ BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'trading_signals' AND policyname = 'Authenticated users can view signals') THEN
-        CREATE POLICY "Authenticated users can view signals" ON public.trading_signals FOR SELECT TO authenticated USING (true);
-      END IF;
-    END $$;
-
-    DO $$ BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'trading_signals' AND policyname = 'Service role can insert signals') THEN
-        CREATE POLICY "Service role can insert signals" ON public.trading_signals FOR INSERT TO service_role WITH CHECK (true);
-      END IF;
-    END $$;
-
-    DO $$ BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'trading_signals' AND policyname = 'Admins can manage signals') THEN
-        CREATE POLICY "Admins can manage signals" ON public.trading_signals FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
-      END IF;
-    END $$;
-
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.trading_signals;
-  `;
-
-  const { error } = await supabase.rpc("exec_sql" as any, { sql_text: sql });
-  
-  // Try direct approach if rpc fails
-  if (error) {
-    // Execute each statement separately via raw SQL
-    const statements = sql.split(';').filter(s => s.trim());
-    const results = [];
-    for (const stmt of statements) {
-      if (!stmt.trim()) continue;
-      const { error: stmtError } = await supabase.from('_manual_migration').select().limit(0);
-      results.push({ stmt: stmt.substring(0, 50), error: stmtError?.message });
+  // Use service role to execute DDL
+  const res = await fetch(
+    `${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!}`,
+      },
     }
-    
-    return new Response(JSON.stringify({ 
-      message: "Please run this SQL manually in your database console",
-      sql 
-    }), { 
-      status: 200, 
-      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+  );
+
+  // Execute raw SQL via the management API
+  const dbUrl = Deno.env.get("SUPABASE_DB_URL");
+  if (!dbUrl) {
+    return new Response(JSON.stringify({ error: "DB URL not configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  // Use postgres module
+  const { default: postgres } = await import("https://deno.land/x/postgresjs@v3.4.4/mod.js");
+  const sql = postgres(dbUrl);
+
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS public.trading_signals (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        pair text NOT NULL,
+        direction text NOT NULL,
+        entry_price numeric NOT NULL,
+        take_profit numeric,
+        stop_loss numeric,
+        status text NOT NULL DEFAULT 'active',
+        source text DEFAULT 'webhook',
+        notes text,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        closed_at timestamptz
+      )
+    `;
+
+    await sql`ALTER TABLE public.trading_signals ENABLE ROW LEVEL SECURITY`;
+
+    // Create policies
+    await sql.unsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'trading_signals' AND policyname = 'Authenticated users can view signals') THEN
+          CREATE POLICY "Authenticated users can view signals" ON public.trading_signals FOR SELECT TO authenticated USING (true);
+        END IF;
+      END $$
+    `);
+
+    await sql.unsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'trading_signals' AND policyname = 'Service role can insert signals') THEN
+          CREATE POLICY "Service role can insert signals" ON public.trading_signals FOR INSERT TO service_role WITH CHECK (true);
+        END IF;
+      END $$
+    `);
+
+    await sql.unsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'trading_signals' AND policyname = 'Admins can manage signals') THEN
+          CREATE POLICY "Admins can manage signals" ON public.trading_signals FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
+        END IF;
+      END $$
+    `);
+
+    await sql.unsafe(`ALTER PUBLICATION supabase_realtime ADD TABLE public.trading_signals`).catch(() => {});
+
+    await sql.end();
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    await sql.end();
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 });
