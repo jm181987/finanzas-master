@@ -29,6 +29,7 @@ export function AdminSidebar() {
     { title: t("admin_nav_courses"), url: "/admin/courses", icon: BookOpen, roles: ["admin", "instructor"], indicator: false },
     { title: t("admin_nav_categories"), url: "/admin/categories", icon: Tag, roles: ["admin", "instructor"], indicator: false },
     { title: t("admin_nav_notifications"), url: "/admin/notifications", icon: Bell, roles: ["admin"], indicator: false },
+    { title: t("admin_nav_fcm"), url: "/admin/fcm", icon: Smartphone, roles: ["admin"], indicator: false },
     { title: t("admin_nav_webhooks"), url: "/admin/webhooks", icon: Webhook, roles: ["admin", "developer"], indicator: true },
   ];
 

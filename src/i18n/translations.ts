@@ -505,6 +505,33 @@ export const translations = {
   webhook_field_bodies: { es: "Cuerpos localizados (en/es/pt)", pt: "Corpos localizados (en/es/pt)" },
   webhook_required: { es: "Requerido", pt: "Obrigatório" },
   admin_nav_webhooks: { es: "Webhooks", pt: "Webhooks" },
+  admin_nav_fcm: { es: "Push Móvil", pt: "Push Móvel" },
+
+  // FCM Config
+  fcm_page_title: { es: "Configuración Push (FCM)", pt: "Configuração Push (FCM)" },
+  fcm_status_active: { es: "FCM configurado y activo", pt: "FCM configurado e ativo" },
+  fcm_status_inactive: { es: "FCM no configurado — las notificaciones push no funcionarán", pt: "FCM não configurado — as notificações push não funcionarão" },
+  fcm_config_title: { es: "Cuenta de servicio Firebase", pt: "Conta de serviço Firebase" },
+  fcm_config_desc: { es: "Pega el JSON de la cuenta de servicio de Firebase para habilitar notificaciones push nativas", pt: "Cole o JSON da conta de serviço do Firebase para habilitar notificações push nativas" },
+  fcm_json_label: { es: "JSON de cuenta de servicio", pt: "JSON da conta de serviço" },
+  fcm_json_placeholder: { es: "Pega aquí el contenido del archivo JSON...", pt: "Cole aqui o conteúdo do arquivo JSON..." },
+  fcm_show: { es: "Mostrar", pt: "Mostrar" },
+  fcm_hide: { es: "Ocultar", pt: "Ocultar" },
+  fcm_hidden_configured: { es: "● JSON configurado (oculto por seguridad)", pt: "● JSON configurado (oculto por segurança)" },
+  fcm_hidden_empty: { es: "Sin configuración — haz clic en Mostrar para editar", pt: "Sem configuração — clique em Mostrar para editar" },
+  fcm_save: { es: "Guardar configuración", pt: "Salvar configuração" },
+  fcm_saving: { es: "Guardando...", pt: "Salvando..." },
+  fcm_saved: { es: "Configuración FCM guardada correctamente", pt: "Configuração FCM salva com sucesso" },
+  fcm_error_empty: { es: "El JSON no puede estar vacío", pt: "O JSON não pode estar vazio" },
+  fcm_error_invalid_json: { es: "JSON inválido — verifica el formato", pt: "JSON inválido — verifique o formato" },
+  fcm_error_missing_fields: { es: "Faltan campos requeridos: project_id, client_email, private_key", pt: "Campos obrigatórios ausentes: project_id, client_email, private_key" },
+  fcm_instructions_title: { es: "¿Cómo obtener el JSON?", pt: "Como obter o JSON?" },
+  fcm_step_1: { es: "Ve a Firebase Console (console.firebase.google.com)", pt: "Vá ao Firebase Console (console.firebase.google.com)" },
+  fcm_step_2: { es: "Selecciona tu proyecto o crea uno nuevo", pt: "Selecione seu projeto ou crie um novo" },
+  fcm_step_3: { es: "Ve a Configuración del proyecto → Cuentas de servicio", pt: "Vá para Configurações do projeto → Contas de serviço" },
+  fcm_step_4: { es: "Haz clic en 'Generar nueva clave privada'", pt: "Clique em 'Gerar nova chave privada'" },
+  fcm_step_5: { es: "Copia todo el contenido del archivo JSON descargado y pégalo aquí", pt: "Copie todo o conteúdo do arquivo JSON baixado e cole aqui" },
+  fcm_json_example_title: { es: "Ejemplo de estructura del JSON", pt: "Exemplo de estrutura do JSON" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
