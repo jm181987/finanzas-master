@@ -118,11 +118,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get FCM service account
-    const fcmJson = Deno.env.get("FCM_SERVICE_ACCOUNT");
+    // Get FCM service account: try DB first, then env secret
+    let fcmJson = Deno.env.get("FCM_SERVICE_ACCOUNT");
+    try {
+      const { data: dbConfig } = await adminClient
+        .from("app_settings")
+        .select("value")
+        .eq("key", "fcm_service_account")
+        .maybeSingle();
+      if (dbConfig?.value) fcmJson = dbConfig.value;
+    } catch { /* table may not exist yet, use env fallback */ }
+
     if (!fcmJson) {
       return new Response(
-        JSON.stringify({ error: "FCM_SERVICE_ACCOUNT secret not configured" }),
+        JSON.stringify({ error: "FCM not configured. Go to Admin → Push Móvil to configure." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
