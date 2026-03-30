@@ -159,7 +159,7 @@ const SignalsTicker = () => {
                     {getBody(signal)}
                   </p>
 
-                  <p className="text-[10px] text-muted-foreground/50 mt-1.5">
+                  <p className="text-[10px] text-gray-400 mt-1.5">
                     {formatDistanceToNow(new Date(signal.created_at), { addSuffix: true, locale: dateLocale })}
                   </p>
                 </motion.div>
