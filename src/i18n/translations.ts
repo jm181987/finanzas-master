@@ -465,6 +465,21 @@ export const translations = {
   collab_already: { es: "Este usuario ya es colaborador", pt: "Este usuário já é colaborador" },
   collab_remove: { es: "Eliminar", pt: "Remover" },
   collab_remove_confirm: { es: "¿Eliminar este colaborador?", pt: "Remover este colaborador?" },
+
+  // Signals
+  signals_title: { es: "Señales de Trading", pt: "Sinais de Trading" },
+  signals_live: { es: "EN VIVO", pt: "AO VIVO" },
+  signals_refresh: { es: "Actualizar", pt: "Atualizar" },
+  signals_empty: { es: "No hay señales aún", pt: "Ainda não há sinais" },
+  signals_empty_desc: { es: "Las señales aparecerán aquí en tiempo real", pt: "Os sinais aparecerão aqui em tempo real" },
+  signals_buy: { es: "🟢 COMPRA", pt: "🟢 COMPRA" },
+  signals_sell: { es: "🔴 VENTA", pt: "🔴 VENDA" },
+  signals_entry: { es: "Entrada", pt: "Entrada" },
+  signals_status_active: { es: "🟢 Activa", pt: "🟢 Ativa" },
+  signals_status_hit_tp: { es: "✅ TP Alcanzado", pt: "✅ TP Atingido" },
+  signals_status_hit_sl: { es: "❌ SL Alcanzado", pt: "❌ SL Atingido" },
+  signals_status_closed: { es: "⏹ Cerrada", pt: "⏹ Fechada" },
+  signals_status_expired: { es: "⏰ Expirada", pt: "⏰ Expirado" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

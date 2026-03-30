@@ -29,7 +29,7 @@ const signalsTable = () => (supabase.from as any)("trading_signals");
 
 const Signals = () => {
   const { user, loading: authLoading } = useAuth();
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const navigate = useNavigate();
   const [signals, setSignals] = useState<TradingSignal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,14 +91,14 @@ const Signals = () => {
   };
 
   const statusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      active: "🟢 Activa",
-      hit_tp: "✅ TP Alcanzado",
-      hit_sl: "❌ SL Alcanzado",
-      closed: "⏹ Cerrada",
-      expired: "⏰ Expirada",
+    const map: Record<string, string> = {
+      active: t("signals_status_active"),
+      hit_tp: t("signals_status_hit_tp"),
+      hit_sl: t("signals_status_hit_sl"),
+      closed: t("signals_status_closed"),
+      expired: t("signals_status_expired"),
     };
-    return labels[status] || status;
+    return map[status] || status;
   };
 
   if (authLoading) {
@@ -116,14 +116,14 @@ const Signals = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <TrendingUp className="h-7 w-7 text-secondary" />
-            <h1 className="text-3xl font-bold text-foreground">Señales de Trading</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t("signals_title")}</h1>
             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 animate-pulse">
-              EN VIVO
+              {t("signals_live")}
             </Badge>
           </div>
           <Button variant="outline" size="sm" onClick={loadSignals} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Actualizar
+            {t("signals_refresh")}
           </Button>
         </div>
 
@@ -131,8 +131,8 @@ const Signals = () => {
           <Card className="border-dashed">
             <CardContent className="py-16 text-center">
               <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-lg text-muted-foreground">No hay señales aún</p>
-              <p className="text-sm text-muted-foreground/70 mt-1">Las señales aparecerán aquí en tiempo real</p>
+              <p className="text-lg text-muted-foreground">{t("signals_empty")}</p>
+              <p className="text-sm text-muted-foreground/70 mt-1">{t("signals_empty_desc")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -164,12 +164,12 @@ const Signals = () => {
                       ? "bg-emerald-500/20 text-emerald-400"
                       : "bg-red-500/20 text-red-400"
                   }`}>
-                    {signal.direction === "buy" ? "🟢 COMPRA" : "🔴 VENTA"}
+                    {signal.direction === "buy" ? t("signals_buy") : t("signals_sell")}
                   </div>
 
                   <div className="grid grid-cols-3 gap-3 text-sm">
                     <div className="bg-muted/30 rounded-lg p-2.5 text-center">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Entrada</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("signals_entry")}</p>
                       <p className="font-mono font-bold text-foreground">{signal.entry_price}</p>
                     </div>
                     <div className="bg-emerald-500/5 rounded-lg p-2.5 text-center">
