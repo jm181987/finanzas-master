@@ -48,12 +48,7 @@ Deno.serve(async (req) => {
       reasoning,
     } = body;
 
-    if (!event_type && !event_name) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: event_type or event_name" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // No required fields — accept any valid JSON payload
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
