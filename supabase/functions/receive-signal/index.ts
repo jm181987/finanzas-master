@@ -21,19 +21,36 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
 
-    // Validate required fields
-    const { pair, direction, entry_price, take_profit, stop_loss } = body;
+    // Accept Bridgewise format
+    const {
+      event_id,
+      source,
+      event_name,
+      event_type,
+      event_date_utc,
+      sentiment,
+      importance_level,
+      ticker,
+      asset_name,
+      asset_name_short,
+      asset_type,
+      currency,
+      asset_trigger_price,
+      asset_threshold_price,
+      asset_change_percent,
+      title_en,
+      body_en,
+      title_es,
+      body_es,
+      title_pt,
+      body_pt,
+      has_reasoning,
+      reasoning,
+    } = body;
 
-    if (!pair || !direction || entry_price == null) {
+    if (!event_type && !event_name) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: pair, direction, entry_price" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!["buy", "sell"].includes(direction.toLowerCase())) {
-      return new Response(
-        JSON.stringify({ error: "direction must be 'buy' or 'sell'" }),
+        JSON.stringify({ error: "Missing required fields: event_type or event_name" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -43,16 +60,37 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data, error } = await supabase.from("trading_signals").insert({
-      pair: pair.toUpperCase(),
-      direction: direction.toLowerCase(),
-      entry_price: parseFloat(entry_price),
-      take_profit: take_profit != null ? parseFloat(take_profit) : null,
-      stop_loss: stop_loss != null ? parseFloat(stop_loss) : null,
-      status: "active",
-      source: body.source || "webhook",
-      notes: body.notes || null,
-    }).select().single();
+    const record = {
+      event_id: event_id || crypto.randomUUID(),
+      source: source || "webhook",
+      event_name: event_name || null,
+      event_type: event_type || null,
+      event_date_utc: event_date_utc || new Date().toISOString(),
+      sentiment: sentiment || null,
+      importance_level: importance_level != null ? parseInt(String(importance_level)) : null,
+      ticker: ticker || null,
+      asset_name: asset_name || null,
+      asset_name_short: asset_name_short || null,
+      asset_type: asset_type || null,
+      currency: currency || null,
+      asset_trigger_price: asset_trigger_price != null ? parseFloat(String(asset_trigger_price)) : null,
+      asset_threshold_price: asset_threshold_price != null ? parseFloat(String(asset_threshold_price)) : null,
+      asset_change_percent: asset_change_percent != null ? parseFloat(String(asset_change_percent)) : null,
+      title_en: title_en || null,
+      title_es: title_es || null,
+      title_pt: title_pt || null,
+      body_en: body_en || null,
+      body_es: body_es || null,
+      body_pt: body_pt || null,
+      has_reasoning: has_reasoning || false,
+      reasoning: reasoning && reasoning.length > 0 ? JSON.stringify(reasoning) : null,
+    };
+
+    const { data, error } = await supabase
+      .from("trading_signals")
+      .insert(record)
+      .select()
+      .single();
 
     if (error) {
       console.error("Insert error:", error);
@@ -62,10 +100,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("Signal received:", data);
+    console.log("Signal received:", data?.event_id);
 
     return new Response(
-      JSON.stringify({ success: true, signal: data }),
+      JSON.stringify({ success: true, signal_id: data?.id }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
