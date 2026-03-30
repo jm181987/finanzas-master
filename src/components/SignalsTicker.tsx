@@ -155,7 +155,7 @@ const SignalsTicker = () => {
                     )}
                   </div>
 
-                  <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                  <p className="text-[11px] text-gray-600 line-clamp-2 mt-1 leading-relaxed">
                     {getBody(signal)}
                   </p>
 
