@@ -82,12 +82,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    const { data: isAdmin } = await adminClient.rpc("has_role", {
+    // adminClient already created above
       _user_id: user.id,
       _role: "admin",
     });
