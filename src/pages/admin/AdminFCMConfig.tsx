@@ -17,6 +17,7 @@ const AdminFCMConfig = () => {
   const [saving, setSaving] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
   const [showJson, setShowJson] = useState(false);
+  const [testingSend, setTestingSend] = useState(false);
   const [parsedInfo, setParsedInfo] = useState<{ project_id?: string; client_email?: string } | null>(null);
 
   const loadConfig = useCallback(async () => {
