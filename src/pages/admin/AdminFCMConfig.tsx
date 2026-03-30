@@ -254,6 +254,30 @@ const AdminFCMConfig = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Test Push */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Send className="h-5 w-5 text-secondary" />
+            Enviar Push de Prueba
+          </CardTitle>
+          <CardDescription>
+            Envía una notificación push de prueba a todos los dispositivos registrados para verificar que FCM funciona correctamente.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={handleTestPush}
+            disabled={testingSend || !isConfigured}
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
+            <Send className="h-4 w-4 mr-2" />
+            {testingSend ? "Enviando..." : "Enviar notificación de prueba"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
