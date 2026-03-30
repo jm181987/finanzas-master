@@ -135,7 +135,7 @@ const SignalsTicker = () => {
                   key={signal.id}
                   initial={i === 0 ? { opacity: 0, y: -10 } : false}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`rounded-lg border p-3 bg-muted/10 ${sentimentBg(signal.sentiment)}`}
+                  className={`rounded-lg border p-3 bg-white shadow-sm ${sentimentBg(signal.sentiment)}`}
                 >
                   <div className="flex items-start gap-2 mb-1">
                     <div className="mt-0.5">{sentimentIcon(signal.sentiment)}</div>
