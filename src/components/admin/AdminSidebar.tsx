@@ -24,12 +24,12 @@ export function AdminSidebar() {
   const { role } = useAuth();
 
   const allItems = [
-    { title: t("admin_nav_dashboard"), url: "/admin", icon: LayoutDashboard, roles: ["admin"] },
-    { title: t("admin_nav_users"), url: "/admin/users", icon: Users, roles: ["admin"] },
-    { title: t("admin_nav_courses"), url: "/admin/courses", icon: BookOpen, roles: ["admin", "instructor"] },
-    { title: t("admin_nav_categories"), url: "/admin/categories", icon: Tag, roles: ["admin", "instructor"] },
-    { title: t("admin_nav_notifications"), url: "/admin/notifications", icon: Bell, roles: ["admin"] },
-    { title: t("admin_nav_webhooks"), url: "/admin/webhooks", icon: Webhook, roles: ["admin", "developer"] },
+    { title: t("admin_nav_dashboard"), url: "/admin", icon: LayoutDashboard, roles: ["admin"], indicator: false },
+    { title: t("admin_nav_users"), url: "/admin/users", icon: Users, roles: ["admin"], indicator: false },
+    { title: t("admin_nav_courses"), url: "/admin/courses", icon: BookOpen, roles: ["admin", "instructor"], indicator: false },
+    { title: t("admin_nav_categories"), url: "/admin/categories", icon: Tag, roles: ["admin", "instructor"], indicator: false },
+    { title: t("admin_nav_notifications"), url: "/admin/notifications", icon: Bell, roles: ["admin"], indicator: false },
+    { title: t("admin_nav_webhooks"), url: "/admin/webhooks", icon: Webhook, roles: ["admin", "developer"], indicator: true },
   ];
 
   const menuItems = allItems.filter((item) => item.roles.includes(role || ""));
@@ -59,11 +59,14 @@ export function AdminSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/admin"}
-                      className="flex items-center gap-2 px-3 py-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent transition-colors relative"
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span>{item.title}</span>}
+                      {item.indicator && (
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
