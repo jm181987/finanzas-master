@@ -119,7 +119,7 @@ const SignalsTicker = () => {
             <div className="flex items-center justify-between px-4 pt-20 pb-3 border-b border-border/30">
               <div className="flex items-center gap-2">
                 <Activity className="h-4 w-4 text-secondary" />
-                <span className="text-sm font-semibold text-foreground">{t("signals_title")}</span>
+                <span className="text-sm font-semibold text-gray-900">{t("signals_title")}</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-medium animate-pulse">
                   {t("signals_live")}
                 </span>
