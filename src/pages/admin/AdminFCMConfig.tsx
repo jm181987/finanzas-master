@@ -20,18 +20,33 @@ const AdminFCMConfig = () => {
   const [testingSend, setTestingSend] = useState(false);
   const [parsedInfo, setParsedInfo] = useState<{ project_id?: string; client_email?: string } | null>(null);
 
-  const callProtectedFunction = useCallback(
-    async <T,>(functionName: string, body: Record<string, unknown>) => {
-      const {
-        data: sessionData,
-        error: sessionError,
-      } = await supabase.auth.getSession();
+  const getValidAccessToken = useCallback(async () => {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
-      const accessToken = sessionData.session?.access_token;
+    if (userError || !userData.user) {
+      const { data: refreshedData, error: refreshError } = await supabase.auth.refreshSession();
+      const refreshedToken = refreshedData.session?.access_token;
 
-      if (sessionError || !accessToken) {
+      if (refreshError || !refreshedToken) {
         throw new Error("No active session. Please sign in again.");
       }
+
+      return refreshedToken;
+    }
+
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+
+    if (sessionError || !accessToken) {
+      throw new Error("No active session. Please sign in again.");
+    }
+
+    return accessToken;
+  }, []);
+
+  const callProtectedFunction = useCallback(
+    async <T,>(functionName: string, body: Record<string, unknown>) => {
+      const accessToken = await getValidAccessToken();
 
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`, {
         method: "POST",
@@ -51,7 +66,7 @@ const AdminFCMConfig = () => {
 
       return result as T;
     },
-    []
+    [getValidAccessToken]
   );
 
   const loadConfig = useCallback(async () => {

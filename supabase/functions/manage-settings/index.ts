@@ -68,26 +68,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     const token = authHeader.slice("Bearer ".length).trim();
     const {
-      data: claimsData,
-      error: claimsError,
-    } = await adminClient.auth.getClaims(token);
+      data: { user },
+      error: userError,
+    } = await userClient.auth.getUser(token);
 
-    const userId = claimsData?.claims?.sub;
-
-    if (claimsError || !userId) {
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const userId = user.id;
     const { data: isAdmin, error: roleError } = await adminClient.rpc("has_role", {
       _user_id: userId,
       _role: "admin",
