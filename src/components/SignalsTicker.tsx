@@ -143,10 +143,10 @@ const SignalsTicker = () => {
                       <p className="text-sm font-semibold text-gray-900 leading-tight line-clamp-2">
                         {getTitle(signal)}
                       </p>
-                      {(signal.asset_name || signal.ticker) && (
+                      {(signal.asset_name || (signal.ticker && signal.ticker.toUpperCase() !== "UNKNOWN")) && (
                         <p className="text-[11px] text-secondary font-medium mt-0.5">
-                          {signal.ticker && <span className="font-mono">{signal.ticker} </span>}
-                          {signal.asset_name}
+                          {signal.ticker && signal.ticker.toUpperCase() !== "UNKNOWN" && <span className="font-mono">{signal.ticker} </span>}
+                          {signal.asset_name && signal.asset_name.toUpperCase() !== "UNKNOWN" ? signal.asset_name : ""}
                         </p>
                       )}
                     </div>
