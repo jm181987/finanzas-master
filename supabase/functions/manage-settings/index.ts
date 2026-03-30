@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // adminClient already created above
+    const { data: isAdmin } = await adminClient.rpc("has_role", {
       _user_id: user.id,
       _role: "admin",
     });
