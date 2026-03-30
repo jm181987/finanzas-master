@@ -12,3 +12,4 @@ verify_jwt = false
 [functions.receive-signal]
 verify_jwt = false
 
+
