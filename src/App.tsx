@@ -19,6 +19,7 @@ import AdminCourseContent from "./pages/admin/AdminCourseContent";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import CourseViewer from "./pages/CourseViewer";
 import Courses from "./pages/Courses";
+import Signals from "./pages/Signals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
