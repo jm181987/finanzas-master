@@ -574,6 +574,48 @@ export type Database = {
           },
         ]
       }
+      trading_signals: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          direction: string
+          entry_price: number
+          id: string
+          notes: string | null
+          pair: string
+          source: string | null
+          status: string
+          stop_loss: number | null
+          take_profit: number | null
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          direction: string
+          entry_price: number
+          id?: string
+          notes?: string | null
+          pair: string
+          source?: string | null
+          status?: string
+          stop_loss?: number | null
+          take_profit?: number | null
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          direction?: string
+          entry_price?: number
+          id?: string
+          notes?: string | null
+          pair?: string
+          source?: string | null
+          status?: string
+          stop_loss?: number | null
+          take_profit?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
