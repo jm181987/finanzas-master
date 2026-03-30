@@ -50,6 +50,17 @@ const normalizeReasoning = (value: unknown): string | null => {
   }
 };
 
+const extractTickerFromBody = (body: string | null): string | null => {
+  if (!body) return null;
+  // Pattern: "Veja TICKER para mais" or "Go see TICKER for" or "Consulta TICKER para"
+  const match = body.match(/(?:Veja|Vea|See|Consulta|Go see)\s+([A-Z][A-Z0-9.]{0,9})\s+(?:para|for)/i);
+  if (match) return match[1].toUpperCase();
+  // Pattern: ticker-like word in parentheses e.g. (AAPL)
+  const paren = body.match(/\(([A-Z][A-Z0-9.]{0,9})\)/);
+  if (paren) return paren[1];
+  return null;
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -305,6 +316,12 @@ Deno.serve(async (req) => {
       has_reasoning: firstBoolean(payload.has_reasoning, payloadData?.has_reasoning, nestedPayload?.has_reasoning, signal?.has_reasoning, reasoning),
       reasoning: normalizeReasoning(reasoning),
     };
+
+    // If ticker is missing or "UNKNOWN", try to extract from body text
+    if (!record.ticker || record.ticker.toUpperCase() === "UNKNOWN") {
+      const extracted = extractTickerFromBody(body_en) || extractTickerFromBody(body_es) || extractTickerFromBody(body_pt);
+      if (extracted) record.ticker = extracted;
+    }
 
     const { data, error } = await supabase
       .from("trading_signals")
