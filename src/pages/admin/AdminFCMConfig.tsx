@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 const AdminFCMConfig = () => {
   const { t } = useLanguage();
-  const { session, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   const [fcmJson, setFcmJson] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -20,21 +20,49 @@ const AdminFCMConfig = () => {
   const [testingSend, setTestingSend] = useState(false);
   const [parsedInfo, setParsedInfo] = useState<{ project_id?: string; client_email?: string } | null>(null);
 
+  const callProtectedFunction = useCallback(
+    async <T,>(functionName: string, body: Record<string, unknown>) => {
+      const {
+        data: sessionData,
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      const accessToken = sessionData.session?.access_token;
+
+      if (sessionError || !accessToken) {
+        throw new Error("No active session. Please sign in again.");
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error((result as { error?: string })?.error || `Function failed: ${response.status}`);
+      }
+
+      return result as T;
+    },
+    []
+  );
+
   const loadConfig = useCallback(async () => {
     if (authLoading) return;
-    if (!session?.access_token) {
-      setLoading(false);
-      return;
-    }
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("manage-settings", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { action: "get", key: "fcm_service_account" },
+      const data = await callProtectedFunction<{ value?: string }>("manage-settings", {
+        action: "get",
+        key: "fcm_service_account",
       });
-
-      if (error) throw error;
 
       const value = data?.value ?? "";
       setFcmJson(value);
@@ -50,13 +78,13 @@ const AdminFCMConfig = () => {
       } else {
         setParsedInfo(null);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error loading FCM config:", e);
-      toast.error("Error loading FCM configuration");
+      toast.error(e.message || "Error loading FCM configuration");
     } finally {
       setLoading(false);
     }
-  }, [authLoading, session?.access_token]);
+  }, [authLoading, callProtectedFunction]);
 
   useEffect(() => {
     loadConfig();
@@ -77,10 +105,6 @@ const AdminFCMConfig = () => {
   };
 
   const handleSave = async () => {
-    if (!session?.access_token) {
-      toast.error("Authentication required");
-      return;
-    }
     if (!fcmJson.trim()) {
       toast.error(t("fcm_error_empty"));
       return;
@@ -89,11 +113,11 @@ const AdminFCMConfig = () => {
 
     setSaving(true);
     try {
-      const { data, error } = await supabase.functions.invoke("manage-settings", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { action: "set", key: "fcm_service_account", value: fcmJson.trim() },
+      const data = await callProtectedFunction<{ error?: string }>("manage-settings", {
+        action: "set",
+        key: "fcm_service_account",
+        value: fcmJson.trim(),
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
       const parsed = JSON.parse(fcmJson.trim());
@@ -108,27 +132,18 @@ const AdminFCMConfig = () => {
   };
 
   const handleTestPush = async () => {
-    if (!session?.access_token) {
-      toast.error("Authentication required");
-      return;
-    }
     if (!isConfigured) {
       toast.error(t("fcm_status_inactive"));
       return;
     }
     setTestingSend(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-push", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: {
-          title: "🔔 Push de prueba",
-          body: "Si ves esta notificación en tu celular, ¡FCM está funcionando correctamente!",
-        },
+      const data = await callProtectedFunction<{ sent?: number; message?: string }>("send-push", {
+        title: "🔔 Push de prueba",
+        body: "Si ves esta notificación en tu celular, ¡FCM está funcionando correctamente!",
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
 
-      if (data?.sent > 0) {
+      if (data?.sent && data.sent > 0) {
         toast.success(`Push enviado a ${data.sent} dispositivo(s)`);
       } else {
         toast.info(data?.message || "No hay dispositivos registrados aún");
