@@ -9,7 +9,7 @@ const corsHeaders = {
 async function ensureTable(adminClient: any) {
   // Check if table exists by trying to query it
   const { error } = await adminClient.from("app_settings").select("key").limit(1);
-  if (error?.code === "42P01") {
+  if (error && (error.code === "42P01" || error.message?.includes("not find"))) {
     // Table doesn't exist - create it using the DB URL
     const dbUrl = Deno.env.get("SUPABASE_DB_URL");
     if (!dbUrl) throw new Error("SUPABASE_DB_URL not configured");
