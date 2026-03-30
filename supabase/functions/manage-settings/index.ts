@@ -75,11 +75,13 @@ Deno.serve(async (req) => {
 
     const token = authHeader.slice("Bearer ".length).trim();
     const {
-      data: { user },
-      error: userError,
-    } = await adminClient.auth.getUser(token);
+      data: claimsData,
+      error: claimsError,
+    } = await adminClient.auth.getClaims(token);
 
-    if (userError || !user) {
+    const userId = claimsData?.claims?.sub;
+
+    if (claimsError || !userId) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -87,7 +89,7 @@ Deno.serve(async (req) => {
     }
 
     const { data: isAdmin, error: roleError } = await adminClient.rpc("has_role", {
-      _user_id: user.id,
+      _user_id: userId,
       _role: "admin",
     });
 
@@ -134,7 +136,7 @@ Deno.serve(async (req) => {
       const { error } = await adminClient
         .from("app_settings")
         .upsert(
-          { key, value, updated_by: user.id },
+          { key, value, updated_by: userId },
           { onConflict: "key" }
         );
 
