@@ -176,14 +176,14 @@ const Signals = () => {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {/* Asset info */}
-                    {(signal.asset_name || signal.ticker) && (
+                    {((signal.asset_name && signal.asset_name.toUpperCase() !== "UNKNOWN") || (signal.ticker && signal.ticker.toUpperCase() !== "UNKNOWN")) && (
                       <div className="flex items-center gap-2">
-                        {signal.ticker && (
+                        {signal.ticker && signal.ticker.toUpperCase() !== "UNKNOWN" && (
                           <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-secondary/15 text-secondary">
                             {signal.ticker}
                           </span>
                         )}
-                        {signal.asset_name && (
+                        {signal.asset_name && signal.asset_name.toUpperCase() !== "UNKNOWN" && (
                           <span className="text-sm font-medium text-foreground">{signal.asset_name}</span>
                         )}
                       </div>
