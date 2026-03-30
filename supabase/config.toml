@@ -12,3 +12,6 @@ verify_jwt = false
 [functions.receive-signal]
 verify_jwt = false
 
+[functions.setup-trading-signals]
+verify_jwt = false
+
