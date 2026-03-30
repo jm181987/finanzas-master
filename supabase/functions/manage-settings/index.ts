@@ -51,6 +51,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Ensure app_settings table exists
+    await adminClient.rpc("exec_sql_if_needed", {}).catch(() => {});
+    // Try creating table via raw approach - use a simple check
+    const { error: tableCheck } = await adminClient.from("app_settings").select("key").limit(1);
+    if (tableCheck?.code === "42P01") {
+      // Table doesn't exist - create it via the function
+      // We'll handle this gracefully
+      return new Response(
+        JSON.stringify({ error: "app_settings table not found. Please run the migration." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { action, key, value } = await req.json();
 
     if (action === "get") {
