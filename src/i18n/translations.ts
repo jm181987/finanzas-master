@@ -480,6 +480,31 @@ export const translations = {
   signals_status_hit_sl: { es: "❌ SL Alcanzado", pt: "❌ SL Atingido" },
   signals_status_closed: { es: "⏹ Cerrada", pt: "⏹ Fechada" },
   signals_status_expired: { es: "⏰ Expirada", pt: "⏰ Expirado" },
+
+  // Webhooks admin
+  webhook_title: { es: "Configuración de Webhooks", pt: "Configuração de Webhooks" },
+  webhook_description: { es: "Configura y prueba los endpoints de recepción de señales", pt: "Configure e teste os endpoints de recepção de sinais" },
+  webhook_url_label: { es: "URL del Webhook", pt: "URL do Webhook" },
+  webhook_url_desc: { es: "Configura esta URL en tu proveedor de señales (ej: Bridgewise)", pt: "Configure esta URL no seu provedor de sinais (ex: Bridgewise)" },
+  webhook_copied: { es: "URL copiada", pt: "URL copiada" },
+  webhook_test_title: { es: "Enviar señal de prueba", pt: "Enviar sinal de teste" },
+  webhook_test_desc: { es: "Envía una señal de prueba para verificar que el webhook funciona", pt: "Envie um sinal de teste para verificar que o webhook funciona" },
+  webhook_send_test: { es: "Enviar prueba", pt: "Enviar teste" },
+  webhook_testing: { es: "Enviando...", pt: "Enviando..." },
+  webhook_test_success: { es: "Señal de prueba recibida correctamente", pt: "Sinal de teste recebido corretamente" },
+  webhook_test_error: { es: "Error al enviar señal de prueba", pt: "Erro ao enviar sinal de teste" },
+  webhook_example_title: { es: "Ejemplo de payload", pt: "Exemplo de payload" },
+  webhook_example_desc: { es: "Formato JSON esperado por el endpoint", pt: "Formato JSON esperado pelo endpoint" },
+  webhook_fields_title: { es: "Campos disponibles", pt: "Campos disponíveis" },
+  webhook_field_event: { es: "Tipo o nombre del evento (al menos uno requerido)", pt: "Tipo ou nome do evento (pelo menos um obrigatório)" },
+  webhook_field_sentiment: { es: "Positive, Negative o Neutral", pt: "Positive, Negative ou Neutral" },
+  webhook_field_importance: { es: "Nivel de importancia (1-5)", pt: "Nível de importância (1-5)" },
+  webhook_field_ticker: { es: "Símbolo del activo", pt: "Símbolo do ativo" },
+  webhook_field_asset: { es: "Nombre del activo", pt: "Nome do ativo" },
+  webhook_field_titles: { es: "Títulos localizados (en/es/pt)", pt: "Títulos localizados (en/es/pt)" },
+  webhook_field_bodies: { es: "Cuerpos localizados (en/es/pt)", pt: "Corpos localizados (en/es/pt)" },
+  webhook_required: { es: "Requerido", pt: "Obrigatório" },
+  admin_nav_webhooks: { es: "Webhooks", pt: "Webhooks" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

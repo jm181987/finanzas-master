@@ -54,6 +54,7 @@ const App = () => (
               <Route path="/admin/categories" element={<AdminLayout><AdminCategories /></AdminLayout>} />
               <Route path="/admin/courses/:id/content" element={<AdminLayout><AdminCourseContent /></AdminLayout>} />
               <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
+              <Route path="/admin/webhooks" element={<AdminLayout><AdminWebhooks /></AdminLayout>} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
