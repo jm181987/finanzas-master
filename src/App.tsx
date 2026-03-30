@@ -33,6 +33,7 @@ const App = () => (
       <BrowserRouter>
         <LanguageProvider>
           <AuthProvider>
+            <SignalsTicker />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />
