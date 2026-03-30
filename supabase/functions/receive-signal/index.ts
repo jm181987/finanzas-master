@@ -41,6 +41,18 @@ const firstBoolean = (...values: unknown[]): boolean => {
 };
 
 const normalizeReasoning = (value: unknown): string | null => {
+
+const extractTickerFromBody = (body: string | null): string | null => {
+  if (!body) return null;
+  // Pattern: "Veja TICKER para mais" or "See TICKER for more"
+  const match = body.match(/(?:Veja|Vea|See)\s+([A-Z][A-Z0-9.]{0,9})\s+(?:para|for)/i);
+  if (match) return match[1].toUpperCase();
+  // Pattern: ticker-like word in parentheses e.g. (AAPL)
+  const paren = body.match(/\(([A-Z][A-Z0-9.]{0,9})\)/);
+  if (paren) return paren[1];
+  return null;
+};
+
   if (value === null || value === undefined) return null;
   if (typeof value === "string") return value.trim() || null;
   try {
@@ -289,6 +301,13 @@ Deno.serve(async (req) => {
       sentiment: firstString(payload.sentiment, payloadData?.sentiment, nestedPayload?.sentiment, signal?.sentiment, payload.signal_sentiment) || null,
       importance_level: firstNumber(payload.importance_level, payloadData?.importance_level, nestedPayload?.importance_level, signal?.importance_level, payload.priority, payloadData?.priority),
       ticker: firstString(payload.ticker, payloadData?.ticker, nestedPayload?.ticker, signal?.ticker, payload.symbol, payloadData?.symbol, payload.asset_symbol) || null,
+
+    // If ticker is missing or "UNKNOWN", try to extract from body text
+    if (!record.ticker || record.ticker.toUpperCase() === "UNKNOWN") {
+      const extracted = extractTickerFromBody(body_en) || extractTickerFromBody(body_es) || extractTickerFromBody(body_pt);
+      if (extracted) record.ticker = extracted;
+    }
+
       asset_name: firstString(payload.asset_name, payloadData?.asset_name, nestedPayload?.asset_name, signal?.asset_name, payload.instrument_name, payloadData?.instrument_name) || null,
       asset_name_short: firstString(payload.asset_name_short, payloadData?.asset_name_short, nestedPayload?.asset_name_short, signal?.asset_name_short, payload.instrument_short_name) || null,
       asset_type: firstString(payload.asset_type, payloadData?.asset_type, nestedPayload?.asset_type, signal?.asset_type, payload.instrument_type) || null,
