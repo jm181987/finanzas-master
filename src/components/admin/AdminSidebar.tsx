@@ -28,8 +28,8 @@ export function AdminSidebar() {
     { title: t("admin_nav_users"), url: "/admin/users", icon: Users, roles: ["admin"] },
     { title: t("admin_nav_courses"), url: "/admin/courses", icon: BookOpen, roles: ["admin", "instructor"] },
     { title: t("admin_nav_categories"), url: "/admin/categories", icon: Tag, roles: ["admin", "instructor"] },
-    { title: t("admin_nav_notifications"), url: "/admin/notifications", icon: Bell, roles: ["admin"] },
-    { title: t("admin_nav_webhooks"), url: "/admin/webhooks", icon: Webhook, roles: ["admin", "developer"] },
+    { title: t("admin_nav_notifications"), url: "/admin/notifications", icon: Bell, roles: ["admin"], indicator: false },
+    { title: t("admin_nav_webhooks"), url: "/admin/webhooks", icon: Webhook, roles: ["admin", "developer"], indicator: true },
   ];
 
   const menuItems = allItems.filter((item) => item.roles.includes(role || ""));
