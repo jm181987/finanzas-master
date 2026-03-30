@@ -20,6 +20,7 @@ import AdminNotifications from "./pages/admin/AdminNotifications";
 import CourseViewer from "./pages/CourseViewer";
 import Courses from "./pages/Courses";
 import Signals from "./pages/Signals";
+import SignalsTicker from "./components/SignalsTicker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
       <BrowserRouter>
         <LanguageProvider>
           <AuthProvider>
+            <SignalsTicker />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />
