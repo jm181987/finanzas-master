@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Smartphone, Save, CheckCircle, AlertCircle, Eye, EyeOff, Shield } from "lucide-react";
+import { Smartphone, Save, CheckCircle, AlertCircle, Eye, EyeOff, Shield, Send } from "lucide-react";
 import { toast } from "sonner";
 
 const AdminFCMConfig = () => {
@@ -17,6 +17,7 @@ const AdminFCMConfig = () => {
   const [saving, setSaving] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
   const [showJson, setShowJson] = useState(false);
+  const [testingSend, setTestingSend] = useState(false);
   const [parsedInfo, setParsedInfo] = useState<{ project_id?: string; client_email?: string } | null>(null);
 
   const loadConfig = useCallback(async () => {
@@ -103,6 +104,39 @@ const AdminFCMConfig = () => {
       toast.error("Error: " + e.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTestPush = async () => {
+    if (!session?.access_token) {
+      toast.error("Authentication required");
+      return;
+    }
+    if (!isConfigured) {
+      toast.error(t("fcm_status_inactive"));
+      return;
+    }
+    setTestingSend(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-push", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          title: "🔔 Push de prueba",
+          body: "Si ves esta notificación en tu celular, ¡FCM está funcionando correctamente!",
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.sent > 0) {
+        toast.success(`Push enviado a ${data.sent} dispositivo(s)`);
+      } else {
+        toast.info(data?.message || "No hay dispositivos registrados aún");
+      }
+    } catch (e: any) {
+      toast.error("Error: " + e.message);
+    } finally {
+      setTestingSend(false);
     }
   };
 
@@ -220,6 +254,30 @@ const AdminFCMConfig = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Test Push */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Send className="h-5 w-5 text-secondary" />
+            Enviar Push de Prueba
+          </CardTitle>
+          <CardDescription>
+            Envía una notificación push de prueba a todos los dispositivos registrados para verificar que FCM funciona correctamente.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={handleTestPush}
+            disabled={testingSend || !isConfigured}
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
+            <Send className="h-4 w-4 mr-2" />
+            {testingSend ? "Enviando..." : "Enviar notificación de prueba"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
