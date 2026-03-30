@@ -301,13 +301,6 @@ Deno.serve(async (req) => {
       sentiment: firstString(payload.sentiment, payloadData?.sentiment, nestedPayload?.sentiment, signal?.sentiment, payload.signal_sentiment) || null,
       importance_level: firstNumber(payload.importance_level, payloadData?.importance_level, nestedPayload?.importance_level, signal?.importance_level, payload.priority, payloadData?.priority),
       ticker: firstString(payload.ticker, payloadData?.ticker, nestedPayload?.ticker, signal?.ticker, payload.symbol, payloadData?.symbol, payload.asset_symbol) || null,
-
-    // If ticker is missing or "UNKNOWN", try to extract from body text
-    if (!record.ticker || record.ticker.toUpperCase() === "UNKNOWN") {
-      const extracted = extractTickerFromBody(body_en) || extractTickerFromBody(body_es) || extractTickerFromBody(body_pt);
-      if (extracted) record.ticker = extracted;
-    }
-
       asset_name: firstString(payload.asset_name, payloadData?.asset_name, nestedPayload?.asset_name, signal?.asset_name, payload.instrument_name, payloadData?.instrument_name) || null,
       asset_name_short: firstString(payload.asset_name_short, payloadData?.asset_name_short, nestedPayload?.asset_name_short, signal?.asset_name_short, payload.instrument_short_name) || null,
       asset_type: firstString(payload.asset_type, payloadData?.asset_type, nestedPayload?.asset_type, signal?.asset_type, payload.instrument_type) || null,
@@ -324,6 +317,12 @@ Deno.serve(async (req) => {
       has_reasoning: firstBoolean(payload.has_reasoning, payloadData?.has_reasoning, nestedPayload?.has_reasoning, signal?.has_reasoning, reasoning),
       reasoning: normalizeReasoning(reasoning),
     };
+
+    // If ticker is missing or "UNKNOWN", try to extract from body text
+    if (!record.ticker || record.ticker.toUpperCase() === "UNKNOWN") {
+      const extracted = extractTickerFromBody(body_en) || extractTickerFromBody(body_es) || extractTickerFromBody(body_pt);
+      if (extracted) record.ticker = extracted;
+    }
 
     const { data, error } = await supabase
       .from("trading_signals")
