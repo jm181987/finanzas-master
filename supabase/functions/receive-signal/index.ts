@@ -73,63 +73,63 @@ Deno.serve(async (req) => {
       });
     }
 
-    const data = asRecord(payload.data);
+    const payloadData = asRecord(payload.data);
     const nestedPayload = asRecord(payload.payload);
     const signal = asRecord(payload.signal);
 
     const titleGroup =
       asRecord(payload.title) ??
-      asRecord(data?.title) ??
+      asRecord(payloadData?.title) ??
       asRecord(nestedPayload?.title) ??
       asRecord(signal?.title);
 
     const bodyGroup =
       asRecord(payload.body) ??
-      asRecord(data?.body) ??
+      asRecord(payloadData?.body) ??
       asRecord(nestedPayload?.body) ??
       asRecord(signal?.body);
 
     const messageGroup =
       asRecord(payload.message) ??
-      asRecord(data?.message) ??
+      asRecord(payloadData?.message) ??
       asRecord(nestedPayload?.message) ??
       asRecord(signal?.message);
 
     const descriptionGroup =
       asRecord(payload.description) ??
-      asRecord(data?.description) ??
+      asRecord(payloadData?.description) ??
       asRecord(nestedPayload?.description) ??
       asRecord(signal?.description);
 
     const contentGroup =
       asRecord(payload.content) ??
-      asRecord(data?.content) ??
+      asRecord(payloadData?.content) ??
       asRecord(nestedPayload?.content) ??
       asRecord(signal?.content);
 
     const summaryGroup =
       asRecord(payload.summary) ??
-      asRecord(data?.summary) ??
+      asRecord(payloadData?.summary) ??
       asRecord(nestedPayload?.summary) ??
       asRecord(signal?.summary);
 
-    const reasoning = payload.reasoning ?? data?.reasoning ?? nestedPayload?.reasoning ?? signal?.reasoning;
+    const reasoning = payload.reasoning ?? payloadData?.reasoning ?? nestedPayload?.reasoning ?? signal?.reasoning;
 
     const title_en = firstString(
       payload.title_en,
-      data?.title_en,
+      payloadData?.title_en,
       nestedPayload?.title_en,
       signal?.title_en,
       payload.headline_en,
-      data?.headline_en,
+      payloadData?.headline_en,
       titleGroup?.en,
       titleGroup?.english,
       payload.title,
-      data?.title,
+      payloadData?.title,
       nestedPayload?.title,
       signal?.title,
       payload.headline,
-      data?.headline,
+      payloadData?.headline,
       payload.event_name,
       payload.event_type,
       payload.asset_name,
@@ -138,19 +138,19 @@ Deno.serve(async (req) => {
 
     const title_es = firstString(
       payload.title_es,
-      data?.title_es,
+      payloadData?.title_es,
       nestedPayload?.title_es,
       signal?.title_es,
       payload.headline_es,
-      data?.headline_es,
+      payloadData?.headline_es,
       titleGroup?.es,
       titleGroup?.spanish,
       payload.title,
-      data?.title,
+      payloadData?.title,
       nestedPayload?.title,
       signal?.title,
       payload.headline,
-      data?.headline,
+      payloadData?.headline,
       payload.event_name,
       payload.event_type,
       payload.asset_name,
@@ -160,21 +160,21 @@ Deno.serve(async (req) => {
     const title_pt = firstString(
       payload.title_pt,
       payload.title_pt_br,
-      data?.title_pt,
-      data?.title_pt_br,
+      payloadData?.title_pt,
+      payloadData?.title_pt_br,
       nestedPayload?.title_pt,
       signal?.title_pt,
       payload.headline_pt,
-      data?.headline_pt,
+      payloadData?.headline_pt,
       titleGroup?.pt,
       titleGroup?.pt_br,
       titleGroup?.portuguese,
       payload.title,
-      data?.title,
+      payloadData?.title,
       nestedPayload?.title,
       signal?.title,
       payload.headline,
-      data?.headline,
+      payloadData?.headline,
       payload.event_name,
       payload.event_type,
       payload.asset_name,
@@ -187,9 +187,9 @@ Deno.serve(async (req) => {
       payload.description_en,
       payload.summary_en,
       payload.content_en,
-      data?.body_en,
-      data?.message_en,
-      data?.description_en,
+      payloadData?.body_en,
+      payloadData?.message_en,
+      payloadData?.description_en,
       nestedPayload?.body_en,
       signal?.body_en,
       bodyGroup?.en,
@@ -202,11 +202,11 @@ Deno.serve(async (req) => {
       payload.description,
       payload.summary,
       payload.content,
-      data?.body,
-      data?.message,
-      data?.description,
-      data?.summary,
-      data?.content,
+      payloadData?.body,
+      payloadData?.message,
+      payloadData?.description,
+      payloadData?.summary,
+      payloadData?.content,
       typeof reasoning === "string" ? reasoning : null,
     );
 
@@ -216,9 +216,9 @@ Deno.serve(async (req) => {
       payload.description_es,
       payload.summary_es,
       payload.content_es,
-      data?.body_es,
-      data?.message_es,
-      data?.description_es,
+      payloadData?.body_es,
+      payloadData?.message_es,
+      payloadData?.description_es,
       nestedPayload?.body_es,
       signal?.body_es,
       bodyGroup?.es,
@@ -231,11 +231,11 @@ Deno.serve(async (req) => {
       payload.description,
       payload.summary,
       payload.content,
-      data?.body,
-      data?.message,
-      data?.description,
-      data?.summary,
-      data?.content,
+      payloadData?.body,
+      payloadData?.message,
+      payloadData?.description,
+      payloadData?.summary,
+      payloadData?.content,
       typeof reasoning === "string" ? reasoning : null,
     );
 
@@ -246,10 +246,10 @@ Deno.serve(async (req) => {
       payload.description_pt,
       payload.summary_pt,
       payload.content_pt,
-      data?.body_pt,
-      data?.body_pt_br,
-      data?.message_pt,
-      data?.description_pt,
+      payloadData?.body_pt,
+      payloadData?.body_pt_br,
+      payloadData?.message_pt,
+      payloadData?.description_pt,
       nestedPayload?.body_pt,
       signal?.body_pt,
       bodyGroup?.pt,
@@ -263,11 +263,11 @@ Deno.serve(async (req) => {
       payload.description,
       payload.summary,
       payload.content,
-      data?.body,
-      data?.message,
-      data?.description,
-      data?.summary,
-      data?.content,
+      payloadData?.body,
+      payloadData?.message,
+      payloadData?.description,
+      payloadData?.summary,
+      payloadData?.content,
       typeof reasoning === "string" ? reasoning : null,
     );
 
@@ -281,28 +281,28 @@ Deno.serve(async (req) => {
     );
 
     const record = {
-      event_id: firstString(payload.event_id, data?.event_id, nestedPayload?.event_id, signal?.event_id, payload.id) || crypto.randomUUID(),
-      source: firstString(payload.source, data?.source, nestedPayload?.source, signal?.source) || "webhook",
-      event_name: firstString(payload.event_name, data?.event_name, nestedPayload?.event_name, signal?.event_name, payload.name, data?.name) || null,
-      event_type: firstString(payload.event_type, data?.event_type, nestedPayload?.event_type, signal?.event_type, payload.type, data?.type) || null,
-      event_date_utc: firstString(payload.event_date_utc, data?.event_date_utc, nestedPayload?.event_date_utc, signal?.event_date_utc, payload.timestamp, data?.timestamp) || new Date().toISOString(),
-      sentiment: firstString(payload.sentiment, data?.sentiment, nestedPayload?.sentiment, signal?.sentiment, payload.signal_sentiment) || null,
-      importance_level: firstNumber(payload.importance_level, data?.importance_level, nestedPayload?.importance_level, signal?.importance_level, payload.priority, data?.priority),
-      ticker: firstString(payload.ticker, data?.ticker, nestedPayload?.ticker, signal?.ticker, payload.symbol, data?.symbol, payload.asset_symbol) || null,
-      asset_name: firstString(payload.asset_name, data?.asset_name, nestedPayload?.asset_name, signal?.asset_name, payload.instrument_name, data?.instrument_name) || null,
-      asset_name_short: firstString(payload.asset_name_short, data?.asset_name_short, nestedPayload?.asset_name_short, signal?.asset_name_short, payload.instrument_short_name) || null,
-      asset_type: firstString(payload.asset_type, data?.asset_type, nestedPayload?.asset_type, signal?.asset_type, payload.instrument_type) || null,
-      currency: firstString(payload.currency, data?.currency, nestedPayload?.currency, signal?.currency) || null,
-      asset_trigger_price: firstNumber(payload.asset_trigger_price, data?.asset_trigger_price, nestedPayload?.asset_trigger_price, signal?.asset_trigger_price, payload.trigger_price),
-      asset_threshold_price: firstNumber(payload.asset_threshold_price, data?.asset_threshold_price, nestedPayload?.asset_threshold_price, signal?.asset_threshold_price, payload.threshold_price),
-      asset_change_percent: firstNumber(payload.asset_change_percent, data?.asset_change_percent, nestedPayload?.asset_change_percent, signal?.asset_change_percent, payload.change_percent),
+      event_id: firstString(payload.event_id, payloadData?.event_id, nestedPayload?.event_id, signal?.event_id, payload.id) || crypto.randomUUID(),
+      source: firstString(payload.source, payloadData?.source, nestedPayload?.source, signal?.source) || "webhook",
+      event_name: firstString(payload.event_name, payloadData?.event_name, nestedPayload?.event_name, signal?.event_name, payload.name, payloadData?.name) || null,
+      event_type: firstString(payload.event_type, payloadData?.event_type, nestedPayload?.event_type, signal?.event_type, payload.type, payloadData?.type) || null,
+      event_date_utc: firstString(payload.event_date_utc, payloadData?.event_date_utc, nestedPayload?.event_date_utc, signal?.event_date_utc, payload.timestamp, payloadData?.timestamp) || new Date().toISOString(),
+      sentiment: firstString(payload.sentiment, payloadData?.sentiment, nestedPayload?.sentiment, signal?.sentiment, payload.signal_sentiment) || null,
+      importance_level: firstNumber(payload.importance_level, payloadData?.importance_level, nestedPayload?.importance_level, signal?.importance_level, payload.priority, payloadData?.priority),
+      ticker: firstString(payload.ticker, payloadData?.ticker, nestedPayload?.ticker, signal?.ticker, payload.symbol, payloadData?.symbol, payload.asset_symbol) || null,
+      asset_name: firstString(payload.asset_name, payloadData?.asset_name, nestedPayload?.asset_name, signal?.asset_name, payload.instrument_name, payloadData?.instrument_name) || null,
+      asset_name_short: firstString(payload.asset_name_short, payloadData?.asset_name_short, nestedPayload?.asset_name_short, signal?.asset_name_short, payload.instrument_short_name) || null,
+      asset_type: firstString(payload.asset_type, payloadData?.asset_type, nestedPayload?.asset_type, signal?.asset_type, payload.instrument_type) || null,
+      currency: firstString(payload.currency, payloadData?.currency, nestedPayload?.currency, signal?.currency) || null,
+      asset_trigger_price: firstNumber(payload.asset_trigger_price, payloadData?.asset_trigger_price, nestedPayload?.asset_trigger_price, signal?.asset_trigger_price, payload.trigger_price),
+      asset_threshold_price: firstNumber(payload.asset_threshold_price, payloadData?.asset_threshold_price, nestedPayload?.asset_threshold_price, signal?.asset_threshold_price, payload.threshold_price),
+      asset_change_percent: firstNumber(payload.asset_change_percent, payloadData?.asset_change_percent, nestedPayload?.asset_change_percent, signal?.asset_change_percent, payload.change_percent),
       title_en,
       title_es,
       title_pt,
       body_en,
       body_es,
       body_pt,
-      has_reasoning: firstBoolean(payload.has_reasoning, data?.has_reasoning, nestedPayload?.has_reasoning, signal?.has_reasoning, reasoning),
+      has_reasoning: firstBoolean(payload.has_reasoning, payloadData?.has_reasoning, nestedPayload?.has_reasoning, signal?.has_reasoning, reasoning),
       reasoning: normalizeReasoning(reasoning),
     };
 
