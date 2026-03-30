@@ -107,7 +107,38 @@ const AdminFCMConfig = () => {
     }
   };
 
-  if (loading) {
+  const handleTestPush = async () => {
+    if (!session?.access_token) {
+      toast.error("Authentication required");
+      return;
+    }
+    if (!isConfigured) {
+      toast.error(t("fcm_status_inactive"));
+      return;
+    }
+    setTestingSend(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-push", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          title: "🔔 Push de prueba",
+          body: "Si ves esta notificación en tu celular, ¡FCM está funcionando correctamente!",
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.sent > 0) {
+        toast.success(`Push enviado a ${data.sent} dispositivo(s)`);
+      } else {
+        toast.info(data?.message || "No hay dispositivos registrados aún");
+      }
+    } catch (e: any) {
+      toast.error("Error: " + e.message);
+    } finally {
+      setTestingSend(false);
+    }
+  };
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
