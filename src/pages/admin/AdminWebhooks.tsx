@@ -98,7 +98,7 @@ const AdminWebhooks = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 shrink-0">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 shrink-0">
               POST
             </Badge>
             <Input value={WEBHOOK_URL} readOnly className="font-mono text-sm" />
