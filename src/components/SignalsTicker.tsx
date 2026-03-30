@@ -114,7 +114,7 @@ const SignalsTicker = () => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-80 z-40 bg-background/98 backdrop-blur-md border-l border-border/40 shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 h-full w-80 z-40 bg-white backdrop-blur-md border-l border-border/40 shadow-2xl flex flex-col"
           >
             <div className="flex items-center justify-between px-4 pt-20 pb-3 border-b border-border/30">
               <div className="flex items-center gap-2">
