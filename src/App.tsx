@@ -17,6 +17,7 @@ import AdminCourses from "./pages/admin/AdminCourses";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminCourseContent from "./pages/admin/AdminCourseContent";
 import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminWebhooks from "./pages/admin/AdminWebhooks";
 import CourseViewer from "./pages/CourseViewer";
 import Courses from "./pages/Courses";
 import Signals from "./pages/Signals";
