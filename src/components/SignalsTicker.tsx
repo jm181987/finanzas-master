@@ -114,12 +114,12 @@ const SignalsTicker = () => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-80 z-40 bg-background/98 backdrop-blur-md border-l border-border/40 shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 h-full w-80 z-40 bg-white backdrop-blur-md border-l border-border/40 shadow-2xl flex flex-col"
           >
             <div className="flex items-center justify-between px-4 pt-20 pb-3 border-b border-border/30">
               <div className="flex items-center gap-2">
                 <Activity className="h-4 w-4 text-secondary" />
-                <span className="text-sm font-semibold text-foreground">{t("signals_title")}</span>
+                <span className="text-sm font-semibold text-gray-900">{t("signals_title")}</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-medium animate-pulse">
                   {t("signals_live")}
                 </span>
@@ -135,12 +135,12 @@ const SignalsTicker = () => {
                   key={signal.id}
                   initial={i === 0 ? { opacity: 0, y: -10 } : false}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`rounded-lg border p-3 bg-muted/10 ${sentimentBg(signal.sentiment)}`}
+                  className={`rounded-lg border p-3 bg-white shadow-sm ${sentimentBg(signal.sentiment)}`}
                 >
                   <div className="flex items-start gap-2 mb-1">
                     <div className="mt-0.5">{sentimentIcon(signal.sentiment)}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground leading-tight line-clamp-2">
+                      <p className="text-sm font-semibold text-gray-900 leading-tight line-clamp-2">
                         {getTitle(signal)}
                       </p>
                       {(signal.asset_name || signal.ticker) && (
@@ -155,11 +155,11 @@ const SignalsTicker = () => {
                     )}
                   </div>
 
-                  <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                  <p className="text-[11px] text-gray-600 line-clamp-2 mt-1 leading-relaxed">
                     {getBody(signal)}
                   </p>
 
-                  <p className="text-[10px] text-muted-foreground/50 mt-1.5">
+                  <p className="text-[10px] text-gray-400 mt-1.5">
                     {formatDistanceToNow(new Date(signal.created_at), { addSuffix: true, locale: dateLocale })}
                   </p>
                 </motion.div>

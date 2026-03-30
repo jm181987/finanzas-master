@@ -576,43 +576,85 @@ export type Database = {
       }
       trading_signals: {
         Row: {
-          closed_at: string | null
+          asset_change_percent: number | null
+          asset_name: string | null
+          asset_name_short: string | null
+          asset_threshold_price: number | null
+          asset_trigger_price: number | null
+          asset_type: string | null
+          body_en: string | null
+          body_es: string | null
+          body_pt: string | null
           created_at: string
-          direction: string
-          entry_price: number
+          currency: string | null
+          event_date_utc: string | null
+          event_id: string | null
+          event_name: string | null
+          event_type: string | null
+          has_reasoning: boolean | null
           id: string
-          notes: string | null
-          pair: string
+          importance_level: number | null
+          reasoning: string | null
+          sentiment: string | null
           source: string | null
-          status: string
-          stop_loss: number | null
-          take_profit: number | null
+          ticker: string | null
+          title_en: string | null
+          title_es: string | null
+          title_pt: string | null
         }
         Insert: {
-          closed_at?: string | null
+          asset_change_percent?: number | null
+          asset_name?: string | null
+          asset_name_short?: string | null
+          asset_threshold_price?: number | null
+          asset_trigger_price?: number | null
+          asset_type?: string | null
+          body_en?: string | null
+          body_es?: string | null
+          body_pt?: string | null
           created_at?: string
-          direction: string
-          entry_price: number
+          currency?: string | null
+          event_date_utc?: string | null
+          event_id?: string | null
+          event_name?: string | null
+          event_type?: string | null
+          has_reasoning?: boolean | null
           id?: string
-          notes?: string | null
-          pair: string
+          importance_level?: number | null
+          reasoning?: string | null
+          sentiment?: string | null
           source?: string | null
-          status?: string
-          stop_loss?: number | null
-          take_profit?: number | null
+          ticker?: string | null
+          title_en?: string | null
+          title_es?: string | null
+          title_pt?: string | null
         }
         Update: {
-          closed_at?: string | null
+          asset_change_percent?: number | null
+          asset_name?: string | null
+          asset_name_short?: string | null
+          asset_threshold_price?: number | null
+          asset_trigger_price?: number | null
+          asset_type?: string | null
+          body_en?: string | null
+          body_es?: string | null
+          body_pt?: string | null
           created_at?: string
-          direction?: string
-          entry_price?: number
+          currency?: string | null
+          event_date_utc?: string | null
+          event_id?: string | null
+          event_name?: string | null
+          event_type?: string | null
+          has_reasoning?: boolean | null
           id?: string
-          notes?: string | null
-          pair?: string
+          importance_level?: number | null
+          reasoning?: string | null
+          sentiment?: string | null
           source?: string | null
-          status?: string
-          stop_loss?: number | null
-          take_profit?: number | null
+          ticker?: string | null
+          title_en?: string | null
+          title_es?: string | null
+          title_pt?: string | null
         }
         Relationships: []
       }
