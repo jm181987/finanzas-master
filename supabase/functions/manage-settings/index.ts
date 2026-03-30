@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
       const { error } = await adminClient
         .from("app_settings")
         .upsert(
-          { key, value, updated_by: user.id },
+          { key, value, updated_by: userId },
           { onConflict: "key" }
         );
 
