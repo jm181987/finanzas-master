@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 
 const AdminFCMConfig = () => {
   const { t } = useLanguage();
+  const { session, loading: authLoading } = useAuth();
   const [fcmJson, setFcmJson] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -17,29 +19,47 @@ const AdminFCMConfig = () => {
   const [showJson, setShowJson] = useState(false);
   const [parsedInfo, setParsedInfo] = useState<{ project_id?: string; client_email?: string } | null>(null);
 
-  useEffect(() => {
-    loadConfig();
-  }, []);
+  const loadConfig = useCallback(async () => {
+    if (authLoading) return;
+    if (!session?.access_token) {
+      setLoading(false);
+      return;
+    }
 
-  const loadConfig = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("manage-settings", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: { action: "get", key: "fcm_service_account" },
       });
-      if (!error && data?.value) {
-        setFcmJson(data.value);
-        setIsConfigured(true);
+
+      if (error) throw error;
+
+      const value = data?.value ?? "";
+      setFcmJson(value);
+      setIsConfigured(Boolean(value));
+
+      if (value) {
         try {
-          const parsed = JSON.parse(data.value);
+          const parsed = JSON.parse(value);
           setParsedInfo({ project_id: parsed.project_id, client_email: parsed.client_email });
-        } catch { setParsedInfo(null); }
+        } catch {
+          setParsedInfo(null);
+        }
+      } else {
+        setParsedInfo(null);
       }
     } catch (e) {
       console.error("Error loading FCM config:", e);
+      toast.error("Error loading FCM configuration");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [authLoading, session?.access_token]);
+
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
 
   const validateJson = (json: string): boolean => {
     try {
@@ -56,6 +76,10 @@ const AdminFCMConfig = () => {
   };
 
   const handleSave = async () => {
+    if (!session?.access_token) {
+      toast.error("Authentication required");
+      return;
+    }
     if (!fcmJson.trim()) {
       toast.error(t("fcm_error_empty"));
       return;
@@ -65,6 +89,7 @@ const AdminFCMConfig = () => {
     setSaving(true);
     try {
       const { data, error } = await supabase.functions.invoke("manage-settings", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: { action: "set", key: "fcm_service_account", value: fcmJson.trim() },
       });
       if (error) throw error;
@@ -76,8 +101,9 @@ const AdminFCMConfig = () => {
       toast.success(t("fcm_saved"));
     } catch (e: any) {
       toast.error("Error: " + e.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (loading) {
