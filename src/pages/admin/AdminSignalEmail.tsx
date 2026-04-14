@@ -20,7 +20,7 @@ const AdminSignalEmail = () => {
   const [recipients, setRecipients] = useState("");
 
   const getToken = useCallback(async () => {
-    const { data } = await supabase.auth.refreshSession();
+    const { data } = await supabase.auth.getSession();
     return data.session?.access_token || session?.access_token || "";
   }, [session]);
 
