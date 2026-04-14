@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, BookOpen, Tag, ArrowLeft, Bell, Webhook, Smartphone } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, Tag, ArrowLeft, Bell, Webhook, Smartphone, Mail } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -31,6 +31,7 @@ export function AdminSidebar() {
     { title: t("admin_nav_notifications"), url: "/admin/notifications", icon: Bell, roles: ["admin"], indicator: false },
     { title: t("admin_nav_fcm"), url: "/admin/fcm", icon: Smartphone, roles: ["admin"], indicator: false },
     { title: t("admin_nav_webhooks"), url: "/admin/webhooks", icon: Webhook, roles: ["admin", "developer"], indicator: true },
+    { title: t("admin_nav_signal_email"), url: "/admin/signal-email", icon: Mail, roles: ["admin"], indicator: false },
   ];
 
   const menuItems = allItems.filter((item) => item.roles.includes(role || ""));

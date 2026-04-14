@@ -532,6 +532,27 @@ export const translations = {
   fcm_step_4: { es: "Haz clic en 'Generar nueva clave privada'", pt: "Clique em 'Gerar nova chave privada'" },
   fcm_step_5: { es: "Copia todo el contenido del archivo JSON descargado y pégalo aquí", pt: "Copie todo o conteúdo do arquivo JSON baixado e cole aqui" },
   fcm_json_example_title: { es: "Ejemplo de estructura del JSON", pt: "Exemplo de estrutura do JSON" },
+  // Signal Email Config
+  admin_nav_signal_email: { es: "Email Señales", pt: "Email Sinais" },
+  signal_email_title: { es: "Configuración de Email para Señales", pt: "Configuração de Email para Sinais" },
+  signal_email_desc: { es: "Configura el envío automático de señales de trading por correo electrónico vía SendGrid", pt: "Configure o envio automático de sinais de trading por email via SendGrid" },
+  signal_email_enabled: { es: "Envío de emails habilitado", pt: "Envio de emails habilitado" },
+  signal_email_disabled: { es: "Envío de emails deshabilitado", pt: "Envio de emails desabilitado" },
+  signal_email_toggle: { es: "Activar/Desactivar envío de emails", pt: "Ativar/Desativar envio de emails" },
+  signal_email_recipients_title: { es: "Destinatarios por defecto", pt: "Destinatários padrão" },
+  signal_email_recipients_desc: { es: "Emails que recibirán todas las señales automáticamente (uno por línea)", pt: "Emails que receberão todos os sinais automaticamente (um por linha)" },
+  signal_email_save: { es: "Guardar configuración", pt: "Salvar configuração" },
+  signal_email_saving: { es: "Guardando...", pt: "Salvando..." },
+  signal_email_saved: { es: "Configuración guardada correctamente", pt: "Configuração salva com sucesso" },
+  signal_email_error: { es: "Error al guardar la configuración", pt: "Erro ao salvar a configuração" },
+  signal_email_test_title: { es: "Enviar email de prueba", pt: "Enviar email de teste" },
+  signal_email_test_desc: { es: "Envía una señal de prueba por email a los destinatarios configurados", pt: "Envia um sinal de teste por email para os destinatários configurados" },
+  signal_email_test_send: { es: "Enviar prueba por email", pt: "Enviar teste por email" },
+  signal_email_test_sending: { es: "Enviando...", pt: "Enviando..." },
+  signal_email_test_success: { es: "Email de prueba enviado correctamente", pt: "Email de teste enviado com sucesso" },
+  signal_email_test_error: { es: "Error al enviar email de prueba", pt: "Erro ao enviar email de teste" },
+  signal_email_sender: { es: "Remitente", pt: "Remetente" },
+  signal_email_no_recipients: { es: "No hay destinatarios configurados", pt: "Não há destinatários configurados" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
