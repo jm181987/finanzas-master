@@ -19,6 +19,7 @@ import AdminCourseContent from "./pages/admin/AdminCourseContent";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminWebhooks from "./pages/admin/AdminWebhooks";
 import AdminFCMConfig from "./pages/admin/AdminFCMConfig";
+import AdminSignalEmail from "./pages/admin/AdminSignalEmail";
 import CourseViewer from "./pages/CourseViewer";
 import Courses from "./pages/Courses";
 import Signals from "./pages/Signals";
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
               <Route path="/admin/fcm" element={<AdminLayout><AdminFCMConfig /></AdminLayout>} />
               <Route path="/admin/webhooks" element={<AdminLayout><AdminWebhooks /></AdminLayout>} />
+              <Route path="/admin/signal-email" element={<AdminLayout><AdminSignalEmail /></AdminLayout>} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
