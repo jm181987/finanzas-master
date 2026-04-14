@@ -40,6 +40,29 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, userId, email, password, fullName, role, bio } = body;
 
+    // LIST ALL EMAILS
+    if (action === "list-emails") {
+      const { data: { users }, error: listErr } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+      if (listErr) return new Response(JSON.stringify({ error: listErr.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      
+      // Join with profiles and roles
+      const userList = [];
+      for (const u of users) {
+        const { data: roleData } = await adminClient.from("user_roles").select("role").eq("user_id", u.id).single();
+        const { data: profile } = await adminClient.from("profiles").select("full_name").eq("id", u.id).single();
+        userList.push({
+          id: u.id,
+          email: u.email,
+          full_name: profile?.full_name || "",
+          role: roleData?.role || "user",
+          created_at: u.created_at,
+        });
+      }
+      return new Response(JSON.stringify({ ok: true, users: userList }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // GET USER (email)
     if (action === "get-user") {
       if (!userId) return new Response(JSON.stringify({ error: "userId requerido" }), { status: 400, headers: corsHeaders });
