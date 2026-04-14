@@ -15,4 +15,7 @@ verify_jwt = false
 [functions.manage-settings]
 verify_jwt = false
 
+[functions.send-signal-email]
+verify_jwt = false
+
 
