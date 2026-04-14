@@ -93,7 +93,7 @@ function buildEmailHtml(signal: SignalEmailPayload["signal"]): string {
   <tr><td style="padding:24px 32px;border-top:1px solid #334155;margin-top:16px;">
     <p style="margin:0;color:#64748b;font-size:12px;text-align:center;">
       Enviado por FinanzasMaster — VenturyFX<br>
-      <a href="https://finanzasmaster.lovable.app/signals" style="color:#0ea5e9;text-decoration:none;">Ver todas las señales →</a>
+      <a href="http://168.197.49.169:3002/signals" style="color:#0ea5e9;text-decoration:none;">Ver todas las señales →</a>
     </p>
   </td></tr>
 </table>
