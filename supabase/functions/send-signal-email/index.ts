@@ -107,6 +107,40 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // --- Auth: API key or admin token ---
+    const signalsApiKey = Deno.env.get("SIGNALS_API_KEY");
+    const apiKey = req.headers.get("x-api-key");
+    const authHeader = req.headers.get("Authorization");
+    let authorized = false;
+
+    if (apiKey && signalsApiKey && apiKey === signalsApiKey) {
+      authorized = true;
+    }
+
+    if (!authorized && authHeader?.startsWith("Bearer ")) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) {
+        const adminClient = createClient(supabaseUrl, serviceKey);
+        const { data: isAdmin } = await adminClient.rpc("has_role", {
+          _user_id: user.id, _role: "admin",
+        });
+        if (isAdmin) authorized = true;
+      }
+    }
+
+    if (!authorized) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
     if (!SENDGRID_API_KEY) {
       return new Response(
