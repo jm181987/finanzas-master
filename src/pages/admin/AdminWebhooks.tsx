@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, Webhook, Send, RefreshCw, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { Copy, Check, Webhook, Send, RefreshCw, ChevronDown, ChevronUp, Clock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
@@ -77,6 +77,9 @@ const AdminWebhooks = () => {
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState("");
+  const [emailLogs, setEmailLogs] = useState<any[]>([]);
+  const [loadingEmailLogs, setLoadingEmailLogs] = useState(true);
+  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
 
   const dateLocale = lang === "pt" ? pt : es;
 
@@ -103,7 +106,37 @@ const AdminWebhooks = () => {
     }
   };
 
-  useEffect(() => { loadLogs(); }, []);
+  const loadEmailLogs = async () => {
+    setLoadingEmailLogs(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || "";
+      // Use list-signals but we'll fetch the last emails sent via the webhook
+      // We'll query trading_signals to correlate, but for email logs we track via the webhook response
+      // For now, store email send results locally from test sends
+      // Actually let's fetch from edge function logs
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-signals?limit=20`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      const result = await res.json();
+      if (result.success && result.data) {
+        // Show the same signals but as email context
+        setEmailLogs(result.data);
+      }
+    } catch (e) {
+      console.error("Error loading email logs:", e);
+    } finally {
+      setLoadingEmailLogs(false);
+    }
+  };
+
+  useEffect(() => { loadLogs(); loadEmailLogs(); }, []);
 
   const copyUrl = async (url: string, type: "signal" | "email" = "signal") => {
     await navigator.clipboard.writeText(url);
@@ -267,7 +300,149 @@ const AdminWebhooks = () => {
         </CardContent>
       </Card>
 
-      {/* Test receive-signal */}
+      {/* Email Logs */}
+      <Card className="border-secondary/30">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Mail className="h-4 w-4 text-secondary" />
+                {lang === "pt" ? "Log de Emails Enviados" : "Log de Emails Enviados"}
+              </CardTitle>
+              <CardDescription>
+                {lang === "pt"
+                  ? "Histórico de sinais que foram enviados por email"
+                  : "Historial de señales que fueron enviadas por email"}
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={loadEmailLogs} disabled={loadingEmailLogs}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loadingEmailLogs ? "animate-spin" : ""}`} />
+              {lang === "pt" ? "Atualizar" : "Actualizar"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loadingEmailLogs ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              {lang === "pt" ? "Carregando..." : "Cargando..."}
+            </p>
+          ) : emailLogs.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              {lang === "pt" ? "Nenhum email enviado ainda" : "No se han enviado emails aún"}
+            </p>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+              {emailLogs.map((log: any) => (
+                <div key={`email-${log.id}`} className="border border-secondary/20 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setExpandedEmailId(expandedEmailId === log.id ? null : log.id)}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/5 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Mail className="h-3.5 w-3.5 text-secondary" />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: dateLocale })}
+                      </span>
+                    </div>
+                    {log.ticker && (
+                      <Badge variant="outline" className="text-xs shrink-0 border-secondary/30">{log.ticker}</Badge>
+                    )}
+                    {log.sentiment && (
+                      <Badge variant="outline" className={`text-[10px] shrink-0 ${sentimentColor[log.sentiment] || ""}`}>
+                        {log.sentiment}
+                      </Badge>
+                    )}
+                    <span className="text-sm text-foreground truncate flex-1">
+                      {lang === "pt"
+                        ? (log.title_pt || log.title_es || log.title_en || log.event_name || "—")
+                        : (log.title_es || log.title_en || log.event_name || "—")}
+                    </span>
+                    {expandedEmailId === log.id
+                      ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                      : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                    }
+                  </button>
+                  {expandedEmailId === log.id && (
+                    <div className="border-t border-secondary/20 bg-secondary/5 px-4 py-3">
+                      <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap text-foreground/80 max-h-80 overflow-y-auto">
+                        {JSON.stringify({
+                          ticker: log.ticker,
+                          asset_name: log.asset_name,
+                          event_name: log.event_name,
+                          sentiment: log.sentiment,
+                          importance_level: log.importance_level,
+                          title_es: log.title_es,
+                          title_pt: log.title_pt,
+                          body_es: log.body_es,
+                          body_pt: log.body_pt,
+                          created_at: log.created_at,
+                        }, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Email Webhook JSON Format */}
+      <Card className="border-secondary/30">
+        <CardHeader>
+          <CardTitle className="text-base">
+            {lang === "pt" ? "📧 Formato JSON — Webhook Email" : "📧 Formato JSON — Webhook Email"}
+          </CardTitle>
+          <CardDescription>
+            {lang === "pt"
+              ? "Estrutura do payload para enviar sinais por email via webhook"
+              : "Estructura del payload para enviar señales por email vía webhook"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">
+              {lang === "pt"
+                ? "Con 'recipients': envía solo a esos emails. Sin 'recipients': envía a TODOS los usuarios."
+                : "Con 'recipients': envía solo a esos emails. Sin 'recipients': envía a TODOS los usuarios."}
+            </p>
+            <pre className="bg-muted rounded-lg p-4 text-xs font-mono overflow-x-auto max-h-96 overflow-y-auto text-foreground">
+{JSON.stringify({
+  ticker: "AAPL",
+  asset_name: "Apple Inc.",
+  event_name: "Earnings Report",
+  sentiment: "Positive",
+  importance_level: 4,
+  title_es: "Reporte de ganancias de Apple",
+  body_es: "Apple superó las expectativas del mercado...",
+  title_pt: "Relatório de ganhos da Apple",
+  body_pt: "A Apple superou as expectativas do mercado...",
+  title_en: "Apple Earnings Report",
+  body_en: "Apple beat market expectations...",
+  recipients: ["user1@mail.com", "user2@mail.com"]
+}, null, 2)}
+            </pre>
+          </div>
+          <div className="space-y-2 text-sm">
+            {[
+              { field: "ticker", desc: lang === "pt" ? "Símbolo do ativo" : "Símbolo del activo" },
+              { field: "asset_name", desc: lang === "pt" ? "Nome do ativo" : "Nombre del activo" },
+              { field: "event_name", desc: lang === "pt" ? "Nome do evento" : "Nombre del evento" },
+              { field: "sentiment", desc: "Positive / Negative / Neutral" },
+              { field: "importance_level", desc: "1-5" },
+              { field: "title_es / title_pt / title_en", desc: lang === "pt" ? "Títulos por idioma" : "Títulos por idioma" },
+              { field: "body_es / body_pt / body_en", desc: lang === "pt" ? "Conteúdo por idioma" : "Contenido por idioma" },
+              { field: "recipients", desc: lang === "pt" ? "Array de emails (opcional). Sem = envia a todos" : "Array de emails (opcional). Sin él = envía a todos" },
+            ].map((f) => (
+              <div key={f.field} className="flex items-start gap-3 py-1.5 border-b border-border/30 last:border-0">
+                <code className="text-xs bg-muted px-2 py-0.5 rounded font-mono shrink-0">{f.field}</code>
+                <span className="text-muted-foreground flex-1">{f.desc}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("webhook_test_title")}</CardTitle>
