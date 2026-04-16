@@ -371,6 +371,7 @@ Deno.serve(async (req) => {
             body_en: record.body_en,
             body_es: record.body_es,
             body_pt: record.body_pt,
+            ...(emailRecipients.length > 0 ? { recipients: emailRecipients } : {}),
           }),
         },
       );
