@@ -445,6 +445,9 @@ const AdminWebhooks = () => {
                         ? (log.title_pt || log.title_es || log.title_en || log.event_name || "—")
                         : (log.title_es || log.title_en || log.event_name || "—")}
                     </span>
+                    <Badge variant="outline" className="border-secondary/30 bg-secondary/10 text-secondary text-[10px] shrink-0">
+                      {lang === "pt" ? "aceptado" : "aceptado"}
+                    </Badge>
                     {expandedEmailId === log.id
                       ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
                       : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -454,6 +457,10 @@ const AdminWebhooks = () => {
                     <div className="border-t border-secondary/20 bg-secondary/5 px-4 py-3">
                       <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap text-foreground/80 max-h-80 overflow-y-auto">
                         {JSON.stringify({
+                          delivery_status: "accepted_by_sendgrid",
+                          note: lang === "pt"
+                            ? "Esto significa que SendGrid aceptó el email, no garantiza entrega final en inbox."
+                            : "Esto significa que SendGrid aceptó el email, no garantiza entrega final en inbox.",
                           ticker: log.ticker,
                           asset_name: log.asset_name,
                           event_name: log.event_name,
