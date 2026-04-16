@@ -339,88 +339,8 @@ Deno.serve(async (req) => {
 
     console.log("Signal received:", data?.event_id);
 
-    // --- Send email if configured ---
-    const emailRecipients: string[] = [];
-
-    // Check if payload has client email
-    const clientObj = asRecord(payload.client);
-    const clientEmail = firstString(clientObj?.email, payload.client_email);
-    if (clientEmail) emailRecipients.push(clientEmail);
-
-    // Load default recipients from app_settings
-    const { data: settingsData } = await supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "signal_email_recipients")
-      .maybeSingle();
-
-    if (settingsData?.value) {
-      try {
-        const defaultRecipients = JSON.parse(settingsData.value);
-        if (Array.isArray(defaultRecipients)) {
-          for (const r of defaultRecipients) {
-            if (typeof r === "string" && r.includes("@") && !emailRecipients.includes(r)) {
-              emailRecipients.push(r);
-            }
-          }
-        }
-      } catch { /* ignore parse errors */ }
-    }
-
-    // Check if email sending is enabled
-    const { data: emailEnabledSetting } = await supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "webhook_signal_email_enabled")
-      .maybeSingle();
-
-    const emailEnabled = emailEnabledSetting?.value !== "false";
-
-    if (emailEnabled && emailRecipients.length > 0) {
-      try {
-        const clientName = firstString(clientObj?.name, payload.client_name);
-        const groupObj = asRecord(payload.group);
-        const groupName = firstString(groupObj?.name, payload.group_name);
-
-        const emailRes = await fetch(
-          `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-signal-email`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-            },
-            body: JSON.stringify({
-              signal: {
-                ticker: record.ticker,
-                asset_name: record.asset_name,
-                event_name: record.event_name,
-                event_type: record.event_type,
-                sentiment: record.sentiment,
-                importance_level: record.importance_level,
-                title_en: record.title_en,
-                title_es: record.title_es,
-                title_pt: record.title_pt,
-                body_en: record.body_en,
-                body_es: record.body_es,
-                body_pt: record.body_pt,
-              },
-              recipients: emailRecipients,
-              client_name: clientName,
-              client_email: clientEmail,
-              group_name: groupName,
-            }),
-          }
-        );
-        const emailResult = await emailRes.json();
-        console.log("Email send result:", JSON.stringify(emailResult));
-      } catch (emailErr) {
-        console.error("Email send error (non-blocking):", emailErr);
-      }
-    }
-
     return new Response(
-      JSON.stringify({ success: true, signal_id: data?.id, emails_sent: emailEnabled ? emailRecipients.length : 0 }),
+      JSON.stringify({ success: true, signal_id: data?.id }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
