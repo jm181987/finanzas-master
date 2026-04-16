@@ -317,14 +317,30 @@ const AdminWebhooks = () => {
       </Card>
 
       {/* Email Webhook URL */}
-      <Card className="border-secondary/30">
+      <Card className={`border-secondary/30 ${!webhookEmailEnabled ? "opacity-60" : ""}`}>
         <CardHeader>
-          <CardTitle className="text-base">📧 Webhook Email de Señales</CardTitle>
-          <CardDescription>
-            {lang === "pt"
-              ? "Envie sinais por email. Com 'recipients' envia ao grupo; sem 'recipients' envia a todos os usuários."
-              : "Envía señales por email. Con 'recipients' envía al grupo; sin 'recipients' envía a TODOS los usuarios."}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">📧 Webhook Email de Señales</CardTitle>
+              <CardDescription>
+                {lang === "pt"
+                  ? "Envie sinais por email. Com 'recipients' envia ao grupo; sem 'recipients' envia a todos os usuários."
+                  : "Envía señales por email. Con 'recipients' envía al grupo; sin 'recipients' envía a TODOS los usuarios."}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-xs text-muted-foreground">
+                {webhookEmailEnabled
+                  ? (lang === "pt" ? "Ativo" : "Activo")
+                  : (lang === "pt" ? "Desativado" : "Desactivado")}
+              </span>
+              <Switch
+                checked={webhookEmailEnabled}
+                onCheckedChange={toggleWebhookEmail}
+                disabled={togglingWebhook}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
