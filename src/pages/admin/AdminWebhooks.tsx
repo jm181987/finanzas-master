@@ -74,7 +74,7 @@ const AdminWebhooks = () => {
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const dateLocale = language === "pt" ? pt : es;
+  const dateLocale = lang === "pt" ? pt : es;
 
   const loadLogs = async () => {
     setLoadingLogs(true);
@@ -144,7 +144,7 @@ const AdminWebhooks = () => {
   };
 
   const getTitle = (s: SignalLog) => {
-    if (language === "pt") return s.title_pt || s.title_es || s.title_en || s.event_name || s.event_type || "—";
+    if (lang === "pt") return s.title_pt || s.title_es || s.title_en || s.event_name || s.event_type || "—";
     return s.title_es || s.title_en || s.event_name || s.event_type || "—";
   };
 
