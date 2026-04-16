@@ -175,6 +175,33 @@ Deno.serve(async (req) => {
     const payload: SignalEmailPayload = await req.json();
     const { signal, recipients } = payload;
 
+    // Logger helper
+    const supabaseUrlForLog = Deno.env.get("SUPABASE_URL")!;
+    const serviceKeyForLog = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const logClient = createClient(supabaseUrlForLog, serviceKeyForLog);
+    const signalMeta = {
+      ticker: signal.ticker || null,
+      sentiment: signal.sentiment || null,
+      event_name: signal.event_name || null,
+    };
+    const logSend = async (
+      recipient: string,
+      status: "sent" | "failed",
+      errorMessage: string | null,
+    ) => {
+      try {
+        await logClient.from("email_send_log").insert({
+          recipient_email: recipient,
+          template_name: "signal_webhook",
+          status,
+          error_message: errorMessage,
+          metadata: signalMeta,
+        });
+      } catch (e) {
+        console.error("Failed to log email send:", e);
+      }
+    };
+
     if (!recipients || recipients.length === 0) {
       return new Response(
         JSON.stringify({ error: "No recipients provided" }),
@@ -219,6 +246,7 @@ Deno.serve(async (req) => {
           status: res.status,
           error: errText,
         });
+        await logSend(to, "failed", errText || `HTTP ${res.status}`);
       } else {
         const messageId = res.headers.get("x-message-id");
         await res.text();
@@ -228,6 +256,7 @@ Deno.serve(async (req) => {
           }`,
         );
         results.push({ email: to, success: true, message_id: messageId });
+        await logSend(to, "sent", null);
       }
     }
 
