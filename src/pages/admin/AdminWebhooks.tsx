@@ -11,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es, pt } from "date-fns/locale";
 
 const WEBHOOK_URL = `https://tnjcigqqmwahnxcsljgk.supabase.co/functions/v1/receive-signal`;
+const WEBHOOK_EMAIL_URL = `https://tnjcigqqmwahnxcsljgk.supabase.co/functions/v1/webhook-signal-email`;
 
 const EXAMPLE_PAYLOAD = JSON.stringify({
   event_id: "example-001",
@@ -69,7 +70,9 @@ const sentimentColor: Record<string, string> = {
 const AdminWebhooks = () => {
   const { t, lang } = useLanguage();
   const [copied, setCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
   const [logs, setLogs] = useState<SignalLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -101,11 +104,48 @@ const AdminWebhooks = () => {
 
   useEffect(() => { loadLogs(); }, []);
 
-  const copyUrl = async () => {
-    await navigator.clipboard.writeText(WEBHOOK_URL);
-    setCopied(true);
+  const copyUrl = async (url: string, type: "signal" | "email" = "signal") => {
+    await navigator.clipboard.writeText(url);
+    if (type === "email") {
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
+    } else {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
     toast.success(t("webhook_copied"));
-    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const sendTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      const res = await fetch(WEBHOOK_EMAIL_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker: "TEST",
+          asset_name: "Test Asset",
+          event_name: "Test Email Signal",
+          sentiment: "Positive",
+          importance_level: 3,
+          title_es: "Señal de Prueba por Email",
+          body_es: "Esta es una señal de prueba enviada desde el panel de administración por email.",
+          title_pt: "Sinal de Teste por Email",
+          body_pt: "Este é um sinal de teste enviado do painel de administração por email.",
+          recipients: [],
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Email enviado a ${data.total_recipients} destinatario(s)`);
+      } else {
+        toast.error("Error: " + (data.error || "Unknown"));
+      }
+    } catch (e) {
+      toast.error("Error al enviar test de email");
+    } finally {
+      setTestingEmail(false);
+    }
   };
 
   const sendTest = async () => {
@@ -181,14 +221,41 @@ const AdminWebhooks = () => {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 shrink-0">POST</Badge>
             <Input value={WEBHOOK_URL} readOnly className="font-mono text-sm" />
-            <Button variant="outline" size="icon" onClick={copyUrl}>
+            <Button variant="outline" size="icon" onClick={() => copyUrl(WEBHOOK_URL, "signal")}>
               {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Test */}
+      {/* Email Webhook URL */}
+      <Card className="border-secondary/30">
+        <CardHeader>
+          <CardTitle className="text-base">📧 Webhook Email de Señales</CardTitle>
+          <CardDescription>
+            {lang === "pt"
+              ? "Envie sinais por email. Com 'recipients' envia ao grupo; sem 'recipients' envia a todos os usuários."
+              : "Envía señales por email. Con 'recipients' envía al grupo; sin 'recipients' envía a TODOS los usuarios."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-secondary/10 text-secondary border-secondary/30 shrink-0">POST</Badge>
+            <Input value={WEBHOOK_EMAIL_URL} readOnly className="font-mono text-sm" />
+            <Button variant="outline" size="icon" onClick={() => copyUrl(WEBHOOK_EMAIL_URL, "email")}>
+              {copiedEmail ? <Check className="h-4 w-4 text-secondary" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <Button onClick={sendTestEmail} disabled={testingEmail} variant="secondary">
+            <Send className="h-4 w-4 mr-2" />
+            {testingEmail
+              ? (lang === "pt" ? "Enviando..." : "Enviando...")
+              : (lang === "pt" ? "Enviar teste por email (a todos)" : "Enviar prueba por email (a todos)")}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Test receive-signal */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("webhook_test_title")}</CardTitle>
