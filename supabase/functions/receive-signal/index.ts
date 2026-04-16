@@ -374,7 +374,7 @@ Deno.serve(async (req) => {
       .eq("key", "webhook_signal_email_enabled")
       .maybeSingle();
 
-    const emailEnabled = emailEnabledSetting?.value === "true";
+    const emailEnabled = emailEnabledSetting?.value !== "false";
 
     if (emailEnabled && emailRecipients.length > 0) {
       try {
