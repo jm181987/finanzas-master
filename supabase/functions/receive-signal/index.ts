@@ -371,7 +371,7 @@ Deno.serve(async (req) => {
     const { data: emailEnabledSetting } = await supabase
       .from("app_settings")
       .select("value")
-      .eq("key", "signal_email_enabled")
+      .eq("key", "webhook_signal_email_enabled")
       .maybeSingle();
 
     const emailEnabled = emailEnabledSetting?.value === "true";
