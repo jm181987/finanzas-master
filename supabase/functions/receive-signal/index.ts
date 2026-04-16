@@ -339,8 +339,66 @@ Deno.serve(async (req) => {
 
     console.log("Signal received:", data?.event_id);
 
+    const emailRecipients = [payload.recipients, payloadData?.recipients, nestedPayload?.recipients, signal?.recipients]
+      .find(Array.isArray)
+      ?.filter((value) => typeof value === "string" && value.includes("@")) ?? [];
+
+    let emailDispatch: { attempted: boolean; success: boolean; error?: string; disabled?: boolean } = {
+      attempted: false,
+      success: false,
+    };
+
+    try {
+      emailDispatch.attempted = true;
+      const emailRes = await fetch(
+        `${Deno.env.get("SUPABASE_URL")!}/functions/v1/webhook-signal-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!}`,
+          },
+          body: JSON.stringify({
+            ticker: record.ticker,
+            asset_name: record.asset_name,
+            event_name: record.event_name,
+            event_type: record.event_type,
+            sentiment: record.sentiment,
+            importance_level: record.importance_level,
+            title_en: record.title_en,
+            title_es: record.title_es,
+            title_pt: record.title_pt,
+            body_en: record.body_en,
+            body_es: record.body_es,
+            body_pt: record.body_pt,
+            ...(emailRecipients.length > 0 ? { recipients: emailRecipients } : {}),
+          }),
+        },
+      );
+
+      const emailResult = await emailRes.json().catch(() => ({}));
+      emailDispatch = {
+        attempted: true,
+        success: emailRes.ok && emailResult?.success !== false,
+        disabled: emailResult?.disabled === true,
+        error: emailRes.ok ? undefined : (emailResult?.error || `HTTP ${emailRes.status}`),
+      };
+
+      if (!emailDispatch.success) {
+        console.error("Automatic signal email dispatch failed:", emailResult);
+      }
+    } catch (emailError) {
+      const message = emailError instanceof Error ? emailError.message : String(emailError);
+      emailDispatch = {
+        attempted: true,
+        success: false,
+        error: message,
+      };
+      console.error("Automatic signal email dispatch error:", emailError);
+    }
+
     return new Response(
-      JSON.stringify({ success: true, signal_id: data?.id }),
+      JSON.stringify({ success: true, signal_id: data?.id, email_dispatch: emailDispatch }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
