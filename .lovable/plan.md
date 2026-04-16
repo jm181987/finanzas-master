@@ -1,59 +1,72 @@
 
 
-# FinanzasMaster — Plataforma de Cursos de Educación Financiera
+# Webhook para envío de señales por email
 
-## 🎨 Landing Page
-- Hero section profesional con diseño moderno en tonos azul oscuro y dorado (temática financiera)
-- Secciones: cursos destacados, categorías (Inversiones, Ahorro, Créditos, Educación Financiera, Herramientas, Mentalidad del Dinero), testimonios, call-to-action
-- Botones de **Iniciar Sesión** y **Registrarse** en el navbar
-- Footer con enlaces e información de la plataforma
+## Resumen
 
-## 🔐 Autenticación y Roles
-- Registro e inicio de sesión con email/contraseña
-- Tres roles: **Admin**, **Desarrollador** (creador de cursos + tutor), **Usuario** (estudiante)
-- Los roles se almacenan en tabla separada con seguridad RLS
-- Perfil de usuario editable (nombre, avatar, bio)
+Crear una nueva Edge Function `webhook-signal-email` que actúe como webhook público (como `receive-signal`). Al recibir un JSON con datos de señal:
 
-## 📚 Catálogo de Cursos
-- Grid de cursos con imagen, título, categoría, autor, precio (gratis/premium), y valoración
-- Filtros por categoría, precio (gratis/de pago), y barra de búsqueda
-- Página de detalle del curso: descripción, temario, instructor, reseñas
-- Badge de "Gratis" o precio para cursos premium
+- **Con `recipients` (array de emails)**: envía el email solo a esos destinatarios
+- **Sin `recipients`**: consulta TODOS los usuarios de la plataforma via `auth.admin.listUsers()` y envía a todos
 
-## 🎬 Visor de Contenido del Curso
-- Navegación lateral con módulos y lecciones
-- Soporte para tres tipos de contenido: **Videos embebidos** (YouTube/Vimeo), **PDFs** descargables, y **Texto** enriquecido
-- Barra de progreso por curso con tracking de lecciones completadas
-- Marcador de "lección completada"
+## Flujo
 
-## 💰 Pagos (Stripe)
-- Compra de cursos premium individuales
-- Proceso de checkout con Stripe
-- Historial de compras en el perfil del usuario
+```text
+Servicio externo
+      │
+      ▼
+POST /webhook-signal-email
+      │
+      ├─ ¿Tiene "recipients"? ──► Sí ──► Enviar solo a esos emails
+      │
+      └─ No ──► Consultar todos los usuarios ──► Enviar a todos
+      │
+      ▼
+Llama internamente a send-signal-email (SendGrid)
+```
 
-## 👨‍💻 Panel del Desarrollador
-- Crear y editar cursos: título, descripción, categoría, imagen, precio
-- Gestión de módulos y lecciones (ordenables)
-- Subir PDFs y escribir contenido de texto
-- Pegar enlaces de YouTube/Vimeo para videos
-- Ver estadísticas de sus cursos (inscritos, progreso promedio)
-- Responder dudas/comentarios de estudiantes en cada lección
+## Payload esperado
 
-## 🛡️ Panel de Administración
-- Dashboard con métricas: usuarios totales, cursos publicados, ingresos
-- Gestión de usuarios: ver, editar roles, desactivar cuentas
-- Gestión de cursos: aprobar, rechazar, destacar cursos
-- Gestión de categorías
+```json
+{
+  "ticker": "AAPL",
+  "asset_name": "Apple Inc.",
+  "event_name": "Earnings Report",
+  "sentiment": "Positive",
+  "importance_level": 4,
+  "title_es": "Reporte de ganancias",
+  "body_es": "Apple superó expectativas...",
+  "title_pt": "Relatório de ganhos",
+  "body_pt": "A Apple superou expectativas...",
+  "recipients": ["user1@mail.com", "user2@mail.com"]
+}
+```
 
-## 📊 Funcionalidades del Estudiante
-- Dashboard personal: cursos inscritos, progreso, cursos completados
-- Sistema de comentarios/preguntas por lección
-- Certificado de finalización descargable (PDF generado)
-- Historial de compras
+Si se omite `recipients`, se envía a todos los usuarios registrados.
 
-## ⚙️ Backend (Lovable Cloud + Supabase)
-- Base de datos: usuarios, perfiles, roles, cursos, módulos, lecciones, inscripciones, progreso, comentarios, pagos
-- Almacenamiento de archivos PDF en Supabase Storage
-- Edge functions para lógica de negocio y generación de certificados
-- Row Level Security en todas las tablas
+## Implementación técnica
+
+1. **Crear `supabase/functions/webhook-signal-email/index.ts`**:
+   - Sin autenticación (webhook público, igual que `receive-signal`)
+   - Extraer datos de señal del payload con la misma flexibilidad del receive-signal
+   - Si `recipients` existe y tiene emails → usarlos directamente
+   - Si no → usar `auth.admin.listUsers()` con service role para obtener todos los emails
+   - Llamar internamente a `send-signal-email` para el envío real via SendGrid
+   - Retornar resumen: cantidad enviada, errores
+
+2. **Desplegar** la nueva función
+
+## Ejemplo de uso
+
+```bash
+# Con grupo específico
+curl -X POST ".../functions/v1/webhook-signal-email" \
+  -H "Content-Type: application/json" \
+  -d '{"ticker":"AAPL","sentiment":"Positive","recipients":["a@b.com"]}'
+
+# A todos los usuarios
+curl -X POST ".../functions/v1/webhook-signal-email" \
+  -H "Content-Type: application/json" \
+  -d '{"ticker":"AAPL","sentiment":"Positive"}'
+```
 
