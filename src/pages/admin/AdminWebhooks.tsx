@@ -78,12 +78,25 @@ const AdminWebhooks = () => {
 
   const loadLogs = async () => {
     setLoadingLogs(true);
-    const { data, error } = await (supabase.from as any)("trading_signals")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (!error && data) setLogs(data);
-    setLoadingLogs(false);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || "";
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-signals?limit=50`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      const result = await res.json();
+      if (result.success && result.data) setLogs(result.data);
+    } catch (e) {
+      console.error("Error loading signals:", e);
+    } finally {
+      setLoadingLogs(false);
+    }
   };
 
   useEffect(() => { loadLogs(); }, []);
