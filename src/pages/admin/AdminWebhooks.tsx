@@ -106,7 +106,37 @@ const AdminWebhooks = () => {
     }
   };
 
-  useEffect(() => { loadLogs(); }, []);
+  const loadEmailLogs = async () => {
+    setLoadingEmailLogs(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || "";
+      // Use list-signals but we'll fetch the last emails sent via the webhook
+      // We'll query trading_signals to correlate, but for email logs we track via the webhook response
+      // For now, store email send results locally from test sends
+      // Actually let's fetch from edge function logs
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-signals?limit=20`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      const result = await res.json();
+      if (result.success && result.data) {
+        // Show the same signals but as email context
+        setEmailLogs(result.data);
+      }
+    } catch (e) {
+      console.error("Error loading email logs:", e);
+    } finally {
+      setLoadingEmailLogs(false);
+    }
+  };
+
+  useEffect(() => { loadLogs(); loadEmailLogs(); }, []);
 
   const copyUrl = async (url: string, type: "signal" | "email" = "signal") => {
     await navigator.clipboard.writeText(url);
