@@ -33,11 +33,14 @@ function buildEmailHtml(signal: SignalEmailPayload["signal"]): string {
   const eventName = signal.event_name || signal.event_type || "Trading Signal";
   const sentiment = signal.sentiment || "Neutral";
   const importance = signal.importance_level || 0;
-  const stars = "★".repeat(Math.min(importance, 5)) + "☆".repeat(Math.max(0, 5 - importance));
+  const stars = "★".repeat(Math.min(importance, 5)) +
+    "☆".repeat(Math.max(0, 5 - importance));
 
-  const sentimentColor =
-    sentiment.toLowerCase() === "positive" ? "#10b981" :
-    sentiment.toLowerCase() === "negative" ? "#ef4444" : "#f59e0b";
+  const sentimentColor = sentiment.toLowerCase() === "positive"
+    ? "#10b981"
+    : sentiment.toLowerCase() === "negative"
+    ? "#ef4444"
+    : "#f59e0b";
 
   const titleEs = signal.title_es || signal.title_en || eventName;
   const bodyEs = signal.body_es || signal.body_en || "";
@@ -71,7 +74,11 @@ function buildEmailHtml(signal: SignalEmailPayload["signal"]): string {
   <tr><td style="padding:16px 32px 0;">
     <p style="margin:0 0 8px;color:#94a3b8;font-size:13px;">Evento</p>
     <p style="margin:0;color:#e2e8f0;font-size:16px;font-weight:600;">${eventName}</p>
-    ${importance > 0 ? `<p style="margin:8px 0 0;color:#fbbf24;font-size:16px;">${stars}</p>` : ""}
+    ${
+    importance > 0
+      ? `<p style="margin:8px 0 0;color:#fbbf24;font-size:16px;">${stars}</p>`
+      : ""
+  }
   </td></tr>
   <!-- Spanish -->
   <tr><td style="padding:20px 32px 0;">
@@ -93,7 +100,7 @@ function buildEmailHtml(signal: SignalEmailPayload["signal"]): string {
   <tr><td style="padding:24px 32px;border-top:1px solid #334155;margin-top:16px;">
     <p style="margin:0;color:#64748b;font-size:12px;text-align:center;">
       Enviado por FinanzasMaster<br>
-      <a href="http://168.197.49.169:3002/signals" style="color:#0ea5e9;text-decoration:none;">Ver todas las señales →</a>
+      <a href="https://finanzasmaster.lovable.app/signals" style="color:#0ea5e9;text-decoration:none;">Ver todas las señales →</a>
     </p>
   </td></tr>
 </table>
@@ -137,7 +144,8 @@ Deno.serve(async (req) => {
       if (user) {
         const adminClient = createClient(supabaseUrl, serviceKey);
         const { data: isAdmin } = await adminClient.rpc("has_role", {
-          _user_id: user.id, _role: "admin",
+          _user_id: user.id,
+          _role: "admin",
         });
         if (isAdmin) authorized = true;
       }
@@ -146,7 +154,10 @@ Deno.serve(async (req) => {
     if (!authorized) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -154,7 +165,10 @@ Deno.serve(async (req) => {
     if (!SENDGRID_API_KEY) {
       return new Response(
         JSON.stringify({ error: "SENDGRID_API_KEY not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -164,11 +178,16 @@ Deno.serve(async (req) => {
     if (!recipients || recipients.length === 0) {
       return new Response(
         JSON.stringify({ error: "No recipients provided" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
-    const subject = `📊 ${signal.ticker || "Signal"} — ${signal.event_name || signal.event_type || "Trading Signal"} (${signal.sentiment || "Neutral"})`;
+    const subject = `📊 ${signal.ticker || "Signal"} — ${
+      signal.event_name || signal.event_type || "Trading Signal"
+    } (${signal.sentiment || "Neutral"})`;
     const html = buildEmailHtml(signal);
 
     const results = [];
@@ -181,7 +200,10 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           personalizations: [{ to: [{ email: to }] }],
-          from: { email: "marketing@venturyfx.com", name: "FinanzasMaster Signals" },
+          from: {
+            email: "marketing@venturyfx.com",
+            name: "FinanzasMaster Signals",
+          },
           subject,
           content: [{ type: "text/html", value: html }],
         }),
@@ -191,23 +213,39 @@ Deno.serve(async (req) => {
       if (!ok) {
         const errText = await res.text();
         console.error(`SendGrid error for ${to}:`, res.status, errText);
-        results.push({ email: to, success: false, status: res.status, error: errText });
+        results.push({
+          email: to,
+          success: false,
+          status: res.status,
+          error: errText,
+        });
       } else {
-        await res.text(); // consume body
-        console.log(`Email sent to ${to}`);
-        results.push({ email: to, success: true });
+        const messageId = res.headers.get("x-message-id");
+        await res.text();
+        console.log(
+          `Email accepted by SendGrid for ${to}${
+            messageId ? ` (${messageId})` : ""
+          }`,
+        );
+        results.push({ email: to, success: true, message_id: messageId });
       }
     }
 
     return new Response(
       JSON.stringify({ success: true, results }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   } catch (e) {
     console.error("send-signal-email error:", e);
     return new Response(
       JSON.stringify({ error: e.message || "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });

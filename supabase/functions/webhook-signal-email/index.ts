@@ -35,7 +35,10 @@ Deno.serve(async (req) => {
     if (enabledSetting?.value === "false") {
       return new Response(
         JSON.stringify({ error: "Webhook is disabled", disabled: true }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -44,7 +47,7 @@ Deno.serve(async (req) => {
 
     if (Array.isArray(payload.recipients) && payload.recipients.length > 0) {
       emailRecipients = payload.recipients.filter(
-        (r: unknown) => typeof r === "string" && r.includes("@")
+        (r: unknown) => typeof r === "string" && r.includes("@"),
       );
     } else {
       const allUsers: string[] = [];
@@ -73,7 +76,10 @@ Deno.serve(async (req) => {
     if (emailRecipients.length === 0) {
       return new Response(
         JSON.stringify({ error: "No recipients found" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -102,7 +108,7 @@ Deno.serve(async (req) => {
           },
           recipients: emailRecipients,
         }),
-      }
+      },
     );
 
     const emailResult = await emailRes.json();
@@ -112,16 +118,23 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         total_recipients: emailRecipients.length,
-        broadcast: !Array.isArray(payload.recipients) || payload.recipients.length === 0,
+        broadcast: !Array.isArray(payload.recipients) ||
+          payload.recipients.length === 0,
         results: emailResult.results || [],
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   } catch (e) {
     console.error("webhook-signal-email error:", e);
     return new Response(
       JSON.stringify({ error: e.message || "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });

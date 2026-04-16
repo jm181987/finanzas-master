@@ -205,6 +205,11 @@ const AdminWebhooks = () => {
   };
 
   const sendTestEmail = async () => {
+    if (!webhookEmailEnabled) {
+      toast.error(lang === "pt" ? "O webhook está desativado" : "El webhook está desactivado");
+      return;
+    }
+
     setTestingEmail(true);
     try {
       const res = await fetch(WEBHOOK_EMAIL_URL, {
@@ -225,12 +230,14 @@ const AdminWebhooks = () => {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Email enviado a ${data.total_recipients} destinatario(s)`);
+        const accepted = data.results?.filter((r: any) => r.success).length || 0;
+        toast.success(`${lang === "pt" ? "Aceptado por SendGrid" : "Aceptado por SendGrid"}: ${accepted}`);
+        loadEmailLogs();
       } else {
         toast.error("Error: " + (data.error || "Unknown"));
       }
     } catch (e) {
-      toast.error("Error al enviar test de email");
+      toast.error(lang === "pt" ? "Erro ao enviar teste de email" : "Error al enviar test de email");
     } finally {
       setTestingEmail(false);
     }
@@ -350,6 +357,17 @@ const AdminWebhooks = () => {
               {copiedEmail ? <Check className="h-4 w-4 text-secondary" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Power className={`h-4 w-4 ${webhookEmailEnabled ? "text-secondary" : "text-muted-foreground"}`} />
+              {lang === "pt" ? "Estado do webhook" : "Estado del webhook"}
+            </div>
+            <Badge variant="outline" className={webhookEmailEnabled ? "border-secondary/30 bg-secondary/10 text-secondary" : "border-border text-muted-foreground"}>
+              {webhookEmailEnabled
+                ? (lang === "pt" ? "Activo" : "Activo")
+                : (lang === "pt" ? "Apagado" : "Apagado")}
+            </Badge>
+          </div>
           <div className="flex items-center gap-2">
             <Input
               value={testEmail}
@@ -358,13 +376,13 @@ const AdminWebhooks = () => {
               className="max-w-xs text-sm"
               type="email"
             />
-            <Button onClick={sendTestEmail} disabled={testingEmail} variant="secondary">
+            <Button onClick={sendTestEmail} disabled={testingEmail || !webhookEmailEnabled} variant="secondary">
               <Send className="h-4 w-4 mr-2" />
               {testingEmail
                 ? "Enviando..."
                 : testEmail.includes("@")
-                  ? (lang === "pt" ? `Enviar teste a ${testEmail}` : `Enviar prueba a ${testEmail}`)
-                  : (lang === "pt" ? "Enviar teste (a todos)" : "Enviar prueba (a todos)")}
+                  ? (lang === "pt" ? `Probar a ${testEmail}` : `Probar a ${testEmail}`)
+                  : (lang === "pt" ? "Probar entrega" : "Probar entrega")}
             </Button>
           </div>
         </CardContent>
@@ -427,6 +445,9 @@ const AdminWebhooks = () => {
                         ? (log.title_pt || log.title_es || log.title_en || log.event_name || "—")
                         : (log.title_es || log.title_en || log.event_name || "—")}
                     </span>
+                    <Badge variant="outline" className="border-secondary/30 bg-secondary/10 text-secondary text-[10px] shrink-0">
+                      {lang === "pt" ? "aceptado por provider" : "aceptado por provider"}
+                    </Badge>
                     {expandedEmailId === log.id
                       ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
                       : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -436,6 +457,10 @@ const AdminWebhooks = () => {
                     <div className="border-t border-secondary/20 bg-secondary/5 px-4 py-3">
                       <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap text-foreground/80 max-h-80 overflow-y-auto">
                         {JSON.stringify({
+                          delivery_status: "accepted_by_sendgrid",
+                          note: lang === "pt"
+                            ? "El proveedor aceptó el envío, pero eso no garantiza entrega final en inbox."
+                            : "El proveedor aceptó el envío, pero eso no garantiza entrega final en inbox.",
                           ticker: log.ticker,
                           asset_name: log.asset_name,
                           event_name: log.event_name,
