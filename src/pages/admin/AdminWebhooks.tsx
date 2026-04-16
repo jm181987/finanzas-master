@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, Webhook, Send, RefreshCw, ChevronDown, ChevronUp, Clock, Mail } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Copy, Check, Webhook, Send, RefreshCw, ChevronDown, ChevronUp, Clock, Mail, Power } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
@@ -80,8 +81,61 @@ const AdminWebhooks = () => {
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [loadingEmailLogs, setLoadingEmailLogs] = useState(true);
   const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
+  const [webhookEmailEnabled, setWebhookEmailEnabled] = useState(true);
+  const [togglingWebhook, setTogglingWebhook] = useState(false);
 
   const dateLocale = lang === "pt" ? pt : es;
+
+  const getToken = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || "";
+  }, []);
+
+  const callSettings = useCallback(async (action: string, key: string, value?: string) => {
+    const token = await getToken();
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-settings`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ action, key, value }),
+      }
+    );
+    return res.json();
+  }, [getToken]);
+
+  // Load webhook enabled state
+  useEffect(() => {
+    callSettings("get", "webhook_signal_email_enabled").then((r) => {
+      if (r.success && r.data?.value !== undefined) {
+        setWebhookEmailEnabled(r.data.value === "true");
+      }
+    });
+  }, [callSettings]);
+
+  const toggleWebhookEmail = async () => {
+    setTogglingWebhook(true);
+    const newValue = !webhookEmailEnabled;
+    try {
+      const result = await callSettings("set", "webhook_signal_email_enabled", String(newValue));
+      if (result.success) {
+        setWebhookEmailEnabled(newValue);
+        toast.success(newValue
+          ? (lang === "pt" ? "Webhook ativado" : "Webhook activado")
+          : (lang === "pt" ? "Webhook desativado" : "Webhook desactivado"));
+      } else {
+        toast.error("Error: " + (result.error || "Unknown"));
+      }
+    } catch {
+      toast.error("Error al cambiar estado");
+    } finally {
+      setTogglingWebhook(false);
+    }
+  };
 
   const loadLogs = async () => {
     setLoadingLogs(true);
@@ -263,14 +317,30 @@ const AdminWebhooks = () => {
       </Card>
 
       {/* Email Webhook URL */}
-      <Card className="border-secondary/30">
+      <Card className={`border-secondary/30 ${!webhookEmailEnabled ? "opacity-60" : ""}`}>
         <CardHeader>
-          <CardTitle className="text-base">📧 Webhook Email de Señales</CardTitle>
-          <CardDescription>
-            {lang === "pt"
-              ? "Envie sinais por email. Com 'recipients' envia ao grupo; sem 'recipients' envia a todos os usuários."
-              : "Envía señales por email. Con 'recipients' envía al grupo; sin 'recipients' envía a TODOS los usuarios."}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">📧 Webhook Email de Señales</CardTitle>
+              <CardDescription>
+                {lang === "pt"
+                  ? "Envie sinais por email. Com 'recipients' envia ao grupo; sem 'recipients' envia a todos os usuários."
+                  : "Envía señales por email. Con 'recipients' envía al grupo; sin 'recipients' envía a TODOS los usuarios."}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-xs text-muted-foreground">
+                {webhookEmailEnabled
+                  ? (lang === "pt" ? "Ativo" : "Activo")
+                  : (lang === "pt" ? "Desativado" : "Desactivado")}
+              </span>
+              <Switch
+                checked={webhookEmailEnabled}
+                onCheckedChange={toggleWebhookEmail}
+                disabled={togglingWebhook}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
