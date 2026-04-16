@@ -163,28 +163,19 @@ const AdminWebhooks = () => {
   const loadEmailLogs = async () => {
     setLoadingEmailLogs(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token || "";
-      // Use list-signals but we'll fetch the last emails sent via the webhook
-      // We'll query trading_signals to correlate, but for email logs we track via the webhook response
-      // For now, store email send results locally from test sends
-      // Actually let's fetch from edge function logs
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-signals?limit=20`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-        }
-      );
-      const result = await res.json();
-      if (result.success && result.data) {
-        // Show the same signals but as email context
-        setEmailLogs(result.data);
+      const { data, error } = await (supabase.from as any)("email_send_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) {
+        console.error("Error loading email_send_log:", error);
+        setEmailLogs([]);
+      } else {
+        setEmailLogs(data || []);
       }
     } catch (e) {
       console.error("Error loading email logs:", e);
+      setEmailLogs([]);
     } finally {
       setLoadingEmailLogs(false);
     }
@@ -420,63 +411,66 @@ const AdminWebhooks = () => {
             </p>
           ) : (
             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-              {emailLogs.map((log: any) => (
-                <div key={`email-${log.id}`} className="border border-secondary/20 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setExpandedEmailId(expandedEmailId === log.id ? null : log.id)}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/5 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Mail className="h-3.5 w-3.5 text-secondary" />
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: dateLocale })}
+              {emailLogs.map((log: any) => {
+                const isSent = log.status === "sent";
+                const isFailed = log.status === "failed";
+                const statusColor = isSent
+                  ? "border-green-500/30 bg-green-500/10 text-green-400"
+                  : isFailed
+                    ? "border-red-500/30 bg-red-500/10 text-red-400"
+                    : "border-yellow-500/30 bg-yellow-500/10 text-yellow-400";
+                const meta = (log.metadata || {}) as Record<string, unknown>;
+                return (
+                  <div key={`email-${log.id}`} className="border border-secondary/20 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setExpandedEmailId(expandedEmailId === log.id ? null : log.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/5 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Mail className="h-3.5 w-3.5 text-secondary" />
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: dateLocale })}
+                        </span>
+                      </div>
+                      {meta.ticker ? (
+                        <Badge variant="outline" className="text-xs shrink-0 border-secondary/30">
+                          {String(meta.ticker)}
+                        </Badge>
+                      ) : null}
+                      <span className="text-sm text-foreground truncate flex-1 font-mono">
+                        {log.recipient_email}
                       </span>
-                    </div>
-                    {log.ticker && (
-                      <Badge variant="outline" className="text-xs shrink-0 border-secondary/30">{log.ticker}</Badge>
-                    )}
-                    {log.sentiment && (
-                      <Badge variant="outline" className={`text-[10px] shrink-0 ${sentimentColor[log.sentiment] || ""}`}>
-                        {log.sentiment}
+                      <Badge variant="outline" className={`${statusColor} text-[10px] shrink-0 uppercase`}>
+                        {log.status}
                       </Badge>
+                      {expandedEmailId === log.id
+                        ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                        : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                      }
+                    </button>
+                    {expandedEmailId === log.id && (
+                      <div className="border-t border-secondary/20 bg-secondary/5 px-4 py-3 space-y-2">
+                        {log.error_message && (
+                          <div className="text-xs text-red-400">
+                            <strong>Error:</strong> {log.error_message}
+                          </div>
+                        )}
+                        <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap text-foreground/80 max-h-80 overflow-y-auto">
+                          {JSON.stringify({
+                            id: log.id,
+                            recipient_email: log.recipient_email,
+                            status: log.status,
+                            template_name: log.template_name,
+                            error_message: log.error_message,
+                            metadata: log.metadata,
+                            created_at: log.created_at,
+                          }, null, 2)}
+                        </pre>
+                      </div>
                     )}
-                    <span className="text-sm text-foreground truncate flex-1">
-                      {lang === "pt"
-                        ? (log.title_pt || log.title_es || log.title_en || log.event_name || "—")
-                        : (log.title_es || log.title_en || log.event_name || "—")}
-                    </span>
-                    <Badge variant="outline" className="border-secondary/30 bg-secondary/10 text-secondary text-[10px] shrink-0">
-                      {lang === "pt" ? "aceptado por provider" : "aceptado por provider"}
-                    </Badge>
-                    {expandedEmailId === log.id
-                      ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
-                      : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                    }
-                  </button>
-                  {expandedEmailId === log.id && (
-                    <div className="border-t border-secondary/20 bg-secondary/5 px-4 py-3">
-                      <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap text-foreground/80 max-h-80 overflow-y-auto">
-                        {JSON.stringify({
-                          delivery_status: "accepted_by_sendgrid",
-                          note: lang === "pt"
-                            ? "El proveedor aceptó el envío, pero eso no garantiza entrega final en inbox."
-                            : "El proveedor aceptó el envío, pero eso no garantiza entrega final en inbox.",
-                          ticker: log.ticker,
-                          asset_name: log.asset_name,
-                          event_name: log.event_name,
-                          sentiment: log.sentiment,
-                          importance_level: log.importance_level,
-                          title_es: log.title_es,
-                          title_pt: log.title_pt,
-                          body_es: log.body_es,
-                          body_pt: log.body_pt,
-                          created_at: log.created_at,
-                        }, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>

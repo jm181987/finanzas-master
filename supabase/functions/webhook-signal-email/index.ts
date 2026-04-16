@@ -18,12 +18,31 @@ Deno.serve(async (req) => {
     });
   }
 
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceKey);
+
+  const logSend = async (
+    recipient: string,
+    status: "sent" | "failed" | "skipped",
+    errorMessage: string | null,
+    metadata: Record<string, unknown>,
+  ) => {
+    try {
+      await supabase.from("email_send_log").insert({
+        recipient_email: recipient,
+        template_name: "signal_webhook",
+        status,
+        error_message: errorMessage,
+        metadata,
+      });
+    } catch (e) {
+      console.error("Failed to log email send:", e);
+    }
+  };
+
   try {
     const payload = await req.json();
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
 
     // Check if webhook is enabled
     const { data: enabledSetting } = await supabase
@@ -83,6 +102,12 @@ Deno.serve(async (req) => {
       );
     }
 
+    const signalMeta = {
+      ticker: payload.ticker || null,
+      sentiment: payload.sentiment || null,
+      event_name: payload.event_name || null,
+    };
+
     const emailRes = await fetch(
       `${supabaseUrl}/functions/v1/send-signal-email`,
       {
@@ -113,6 +138,43 @@ Deno.serve(async (req) => {
 
     const emailResult = await emailRes.json();
     console.log("webhook-signal-email result:", JSON.stringify(emailResult));
+
+    // Log each send result individually
+    const results = Array.isArray(emailResult.results)
+      ? emailResult.results
+      : [];
+    const logPromises: Promise<void>[] = [];
+
+    if (results.length > 0) {
+      for (const r of results) {
+        const recipient = r.recipient || r.email || "unknown";
+        const ok = r.success === true || r.status === 200 ||
+          (r.status >= 200 && r.status < 300);
+        logPromises.push(
+          logSend(
+            recipient,
+            ok ? "sent" : "failed",
+            ok ? null : (r.error || `HTTP ${r.status}` || "Unknown error"),
+            signalMeta,
+          ),
+        );
+      }
+    } else {
+      // Fallback: log all recipients as sent if no per-recipient breakdown
+      const ok = emailRes.ok && emailResult.success !== false;
+      for (const recipient of emailRecipients) {
+        logPromises.push(
+          logSend(
+            recipient,
+            ok ? "sent" : "failed",
+            ok ? null : (emailResult.error || `HTTP ${emailRes.status}`),
+            signalMeta,
+          ),
+        );
+      }
+    }
+
+    await Promise.all(logPromises);
 
     return new Response(
       JSON.stringify({
