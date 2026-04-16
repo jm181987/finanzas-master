@@ -2,40 +2,50 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key",
 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const signalsApiKey = Deno.env.get("SIGNALS_API_KEY");
+    const apiKey = req.headers.get("x-api-key");
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
 
-    // Verify caller is admin or developer
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: corsHeaders });
+    let authorized = false;
 
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // Check caller role
-    const { data: callerRole } = await adminClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!callerRole || !["admin", "developer"].includes(callerRole.role)) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
+    // Option 1: Fixed API key
+    if (apiKey && signalsApiKey && apiKey === signalsApiKey) {
+      authorized = true;
     }
+
+    // Option 2: Admin/developer session token
+    if (!authorized && authHeader?.startsWith("Bearer ")) {
+      const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: userError } = await userClient.auth.getUser();
+      if (!userError && user) {
+        const adminClient = createClient(supabaseUrl, serviceKey);
+        const { data: callerRole } = await adminClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
+        if (callerRole && ["admin", "developer"].includes(callerRole.role)) {
+          authorized = true;
+        }
+      }
+    }
+
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    }
+
+    const adminClient = createClient(supabaseUrl, serviceKey);
 
     const body = await req.json();
     const { action, userId, email, password, fullName, role, bio } = body;
