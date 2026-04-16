@@ -133,7 +133,7 @@ const AdminWebhooks = () => {
           body_es: "Esta es una señal de prueba enviada desde el panel de administración por email.",
           title_pt: "Sinal de Teste por Email",
           body_pt: "Este é um sinal de teste enviado do painel de administração por email.",
-          recipients: [],
+          recipients: testEmail.includes("@") ? [testEmail.trim()] : [],
         }),
       });
       const data = await res.json();
