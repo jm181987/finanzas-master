@@ -246,6 +246,7 @@ Deno.serve(async (req) => {
           status: res.status,
           error: errText,
         });
+        await logSend(to, "failed", errText || `HTTP ${res.status}`);
       } else {
         const messageId = res.headers.get("x-message-id");
         await res.text();
@@ -255,6 +256,7 @@ Deno.serve(async (req) => {
           }`,
         );
         results.push({ email: to, success: true, message_id: messageId });
+        await logSend(to, "sent", null);
       }
     }
 
