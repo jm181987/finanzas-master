@@ -231,7 +231,8 @@ const AdminWebhooks = () => {
       const data = await res.json();
       if (data.success) {
         const accepted = data.results?.filter((r: any) => r.success).length || 0;
-        toast.success(`${lang === "pt" ? "SendGrid aceitou" : "SendGrid aceptó"} ${accepted} email(s)`);
+        toast.success(`${lang === "pt" ? "Aceptado por SendGrid" : "Aceptado por SendGrid"}: ${accepted}`);
+        loadEmailLogs();
       } else {
         toast.error("Error: " + (data.error || "Unknown"));
       }
@@ -375,13 +376,13 @@ const AdminWebhooks = () => {
               className="max-w-xs text-sm"
               type="email"
             />
-            <Button onClick={sendTestEmail} disabled={testingEmail} variant="secondary">
+            <Button onClick={sendTestEmail} disabled={testingEmail || !webhookEmailEnabled} variant="secondary">
               <Send className="h-4 w-4 mr-2" />
               {testingEmail
                 ? "Enviando..."
                 : testEmail.includes("@")
-                  ? (lang === "pt" ? `Enviar teste a ${testEmail}` : `Enviar prueba a ${testEmail}`)
-                  : (lang === "pt" ? "Enviar teste (a todos)" : "Enviar prueba (a todos)")}
+                  ? (lang === "pt" ? `Probar a ${testEmail}` : `Probar a ${testEmail}`)
+                  : (lang === "pt" ? "Probar entrega" : "Probar entrega")}
             </Button>
           </div>
         </CardContent>
