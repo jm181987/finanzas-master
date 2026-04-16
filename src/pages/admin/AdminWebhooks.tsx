@@ -205,6 +205,11 @@ const AdminWebhooks = () => {
   };
 
   const sendTestEmail = async () => {
+    if (!webhookEmailEnabled) {
+      toast.error(lang === "pt" ? "O webhook está desativado" : "El webhook está desactivado");
+      return;
+    }
+
     setTestingEmail(true);
     try {
       const res = await fetch(WEBHOOK_EMAIL_URL, {
@@ -225,12 +230,13 @@ const AdminWebhooks = () => {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Email enviado a ${data.total_recipients} destinatario(s)`);
+        const accepted = data.results?.filter((r: any) => r.success).length || 0;
+        toast.success(`${lang === "pt" ? "SendGrid aceitou" : "SendGrid aceptó"} ${accepted} email(s)`);
       } else {
         toast.error("Error: " + (data.error || "Unknown"));
       }
     } catch (e) {
-      toast.error("Error al enviar test de email");
+      toast.error(lang === "pt" ? "Erro ao enviar teste de email" : "Error al enviar test de email");
     } finally {
       setTestingEmail(false);
     }
