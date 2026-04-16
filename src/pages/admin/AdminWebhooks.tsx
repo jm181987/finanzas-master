@@ -67,7 +67,7 @@ const sentimentColor: Record<string, string> = {
 };
 
 const AdminWebhooks = () => {
-  const { t, language } = useLanguage();
+  const { t, lang } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [testing, setTesting] = useState(false);
   const [logs, setLogs] = useState<SignalLog[]>([]);
