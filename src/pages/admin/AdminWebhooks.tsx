@@ -11,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es, pt } from "date-fns/locale";
 
 const WEBHOOK_URL = `https://tnjcigqqmwahnxcsljgk.supabase.co/functions/v1/receive-signal`;
+const WEBHOOK_EMAIL_URL = `https://tnjcigqqmwahnxcsljgk.supabase.co/functions/v1/webhook-signal-email`;
 
 const EXAMPLE_PAYLOAD = JSON.stringify({
   event_id: "example-001",
@@ -69,7 +70,9 @@ const sentimentColor: Record<string, string> = {
 const AdminWebhooks = () => {
   const { t, lang } = useLanguage();
   const [copied, setCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
   const [logs, setLogs] = useState<SignalLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -101,11 +104,48 @@ const AdminWebhooks = () => {
 
   useEffect(() => { loadLogs(); }, []);
 
-  const copyUrl = async () => {
-    await navigator.clipboard.writeText(WEBHOOK_URL);
-    setCopied(true);
+  const copyUrl = async (url: string, type: "signal" | "email" = "signal") => {
+    await navigator.clipboard.writeText(url);
+    if (type === "email") {
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
+    } else {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
     toast.success(t("webhook_copied"));
-    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const sendTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      const res = await fetch(WEBHOOK_EMAIL_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker: "TEST",
+          asset_name: "Test Asset",
+          event_name: "Test Email Signal",
+          sentiment: "Positive",
+          importance_level: 3,
+          title_es: "Señal de Prueba por Email",
+          body_es: "Esta es una señal de prueba enviada desde el panel de administración por email.",
+          title_pt: "Sinal de Teste por Email",
+          body_pt: "Este é um sinal de teste enviado do painel de administração por email.",
+          recipients: [],
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Email enviado a ${data.total_recipients} destinatario(s)`);
+      } else {
+        toast.error("Error: " + (data.error || "Unknown"));
+      }
+    } catch (e) {
+      toast.error("Error al enviar test de email");
+    } finally {
+      setTestingEmail(false);
+    }
   };
 
   const sendTest = async () => {
