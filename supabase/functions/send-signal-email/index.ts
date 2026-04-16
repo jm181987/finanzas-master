@@ -117,6 +117,15 @@ Deno.serve(async (req) => {
       authorized = true;
     }
 
+    // Allow service role key as Bearer token (internal calls)
+    if (!authorized && authHeader?.startsWith("Bearer ")) {
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const token = authHeader.replace("Bearer ", "");
+      if (token === serviceKey) {
+        authorized = true;
+      }
+    }
+
     if (!authorized && authHeader?.startsWith("Bearer ")) {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
