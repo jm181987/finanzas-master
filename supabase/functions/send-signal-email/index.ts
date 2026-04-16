@@ -93,7 +93,7 @@ function buildEmailHtml(signal: SignalEmailPayload["signal"]): string {
   <tr><td style="padding:24px 32px;border-top:1px solid #334155;margin-top:16px;">
     <p style="margin:0;color:#64748b;font-size:12px;text-align:center;">
       Enviado por FinanzasMaster<br>
-      <a href="http://168.197.49.169:3002/signals" style="color:#0ea5e9;text-decoration:none;">Ver todas las señales →</a>
+      <a href="https://finanzasmaster.lovable.app/signals" style="color:#0ea5e9;text-decoration:none;">Ver todas las señales →</a>
     </p>
   </td></tr>
 </table>
@@ -193,9 +193,10 @@ Deno.serve(async (req) => {
         console.error(`SendGrid error for ${to}:`, res.status, errText);
         results.push({ email: to, success: false, status: res.status, error: errText });
       } else {
-        await res.text(); // consume body
-        console.log(`Email sent to ${to}`);
-        results.push({ email: to, success: true });
+        const messageId = res.headers.get("x-message-id");
+        await res.text();
+        console.log(`Email accepted by SendGrid for ${to}${messageId ? ` (${messageId})` : ""}`);
+        results.push({ email: to, success: true, message_id: messageId });
       }
     }
 
