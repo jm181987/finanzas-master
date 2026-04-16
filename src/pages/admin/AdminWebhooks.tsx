@@ -221,14 +221,41 @@ const AdminWebhooks = () => {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 shrink-0">POST</Badge>
             <Input value={WEBHOOK_URL} readOnly className="font-mono text-sm" />
-            <Button variant="outline" size="icon" onClick={copyUrl}>
+            <Button variant="outline" size="icon" onClick={() => copyUrl(WEBHOOK_URL, "signal")}>
               {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Test */}
+      {/* Email Webhook URL */}
+      <Card className="border-secondary/30">
+        <CardHeader>
+          <CardTitle className="text-base">📧 Webhook Email de Señales</CardTitle>
+          <CardDescription>
+            {lang === "pt"
+              ? "Envie sinais por email. Com 'recipients' envia ao grupo; sem 'recipients' envia a todos os usuários."
+              : "Envía señales por email. Con 'recipients' envía al grupo; sin 'recipients' envía a TODOS los usuarios."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-secondary/10 text-secondary border-secondary/30 shrink-0">POST</Badge>
+            <Input value={WEBHOOK_EMAIL_URL} readOnly className="font-mono text-sm" />
+            <Button variant="outline" size="icon" onClick={() => copyUrl(WEBHOOK_EMAIL_URL, "email")}>
+              {copiedEmail ? <Check className="h-4 w-4 text-secondary" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <Button onClick={sendTestEmail} disabled={testingEmail} variant="secondary">
+            <Send className="h-4 w-4 mr-2" />
+            {testingEmail
+              ? (lang === "pt" ? "Enviando..." : "Enviando...")
+              : (lang === "pt" ? "Enviar teste por email (a todos)" : "Enviar prueba por email (a todos)")}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Test receive-signal */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("webhook_test_title")}</CardTitle>
