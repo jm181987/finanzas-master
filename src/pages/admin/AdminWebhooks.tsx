@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, Webhook, Send, RefreshCw, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { Copy, Check, Webhook, Send, RefreshCw, ChevronDown, ChevronUp, Clock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
@@ -77,6 +77,9 @@ const AdminWebhooks = () => {
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState("");
+  const [emailLogs, setEmailLogs] = useState<any[]>([]);
+  const [loadingEmailLogs, setLoadingEmailLogs] = useState(true);
+  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
 
   const dateLocale = lang === "pt" ? pt : es;
 
