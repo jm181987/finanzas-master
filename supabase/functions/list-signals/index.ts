@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key",
 };
 
 Deno.serve(async (req) => {
@@ -11,47 +11,50 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const signalsApiKey = Deno.env.get("SIGNALS_API_KEY");
 
-    // Verify user with anon client
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
+    // Auth: accept either x-api-key header or Bearer token (admin)
+    const apiKey = req.headers.get("x-api-key");
+    const authHeader = req.headers.get("Authorization");
+
+    let authorized = false;
+
+    // Option 1: Fixed API key
+    if (apiKey && signalsApiKey && apiKey === signalsApiKey) {
+      authorized = true;
+    }
+
+    // Option 2: Admin session token
+    if (!authorized && authHeader?.startsWith("Bearer ")) {
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) {
+        const adminClient = createClient(supabaseUrl, serviceKey);
+        const { data: isAdmin } = await adminClient.rpc("has_role", {
+          _user_id: user.id,
+          _role: "admin",
+        });
+        if (isAdmin) authorized = true;
+      }
+    }
+
+    if (!authorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Check admin role
-    const adminClient = createClient(supabaseUrl, serviceKey);
-    const { data: isAdmin } = await adminClient.rpc("has_role", {
-      _user_id: user.id,
-      _role: "admin",
-    });
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Fetch signals with service role (bypasses RLS)
+    // Fetch signals with service role
     const url = new URL(req.url);
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 200);
 
+    const adminClient = createClient(supabaseUrl, serviceKey);
     const { data, error } = await adminClient
       .from("trading_signals")
       .select("*")
