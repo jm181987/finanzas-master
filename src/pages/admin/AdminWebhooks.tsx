@@ -76,6 +76,7 @@ const AdminWebhooks = () => {
   const [logs, setLogs] = useState<SignalLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [testEmail, setTestEmail] = useState("");
 
   const dateLocale = lang === "pt" ? pt : es;
 
@@ -132,7 +133,7 @@ const AdminWebhooks = () => {
           body_es: "Esta es una señal de prueba enviada desde el panel de administración por email.",
           title_pt: "Sinal de Teste por Email",
           body_pt: "Este é um sinal de teste enviado do painel de administração por email.",
-          recipients: [],
+          recipients: testEmail.includes("@") ? [testEmail.trim()] : [],
         }),
       });
       const data = await res.json();
@@ -246,12 +247,23 @@ const AdminWebhooks = () => {
               {copiedEmail ? <Check className="h-4 w-4 text-secondary" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
-          <Button onClick={sendTestEmail} disabled={testingEmail} variant="secondary">
-            <Send className="h-4 w-4 mr-2" />
-            {testingEmail
-              ? (lang === "pt" ? "Enviando..." : "Enviando...")
-              : (lang === "pt" ? "Enviar teste por email (a todos)" : "Enviar prueba por email (a todos)")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Input
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder={lang === "pt" ? "Email para teste (opcional)" : "Email para prueba (opcional)"}
+              className="max-w-xs text-sm"
+              type="email"
+            />
+            <Button onClick={sendTestEmail} disabled={testingEmail} variant="secondary">
+              <Send className="h-4 w-4 mr-2" />
+              {testingEmail
+                ? "Enviando..."
+                : testEmail.includes("@")
+                  ? (lang === "pt" ? `Enviar teste a ${testEmail}` : `Enviar prueba a ${testEmail}`)
+                  : (lang === "pt" ? "Enviar teste (a todos)" : "Enviar prueba (a todos)")}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
