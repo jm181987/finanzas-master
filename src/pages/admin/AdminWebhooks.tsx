@@ -356,6 +356,17 @@ const AdminWebhooks = () => {
               {copiedEmail ? <Check className="h-4 w-4 text-secondary" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Power className={`h-4 w-4 ${webhookEmailEnabled ? "text-secondary" : "text-muted-foreground"}`} />
+              {lang === "pt" ? "Estado do webhook" : "Estado del webhook"}
+            </div>
+            <Badge variant="outline" className={webhookEmailEnabled ? "border-secondary/30 bg-secondary/10 text-secondary" : "border-border text-muted-foreground"}>
+              {webhookEmailEnabled
+                ? (lang === "pt" ? "Activo" : "Activo")
+                : (lang === "pt" ? "Apagado" : "Apagado")}
+            </Badge>
+          </div>
           <div className="flex items-center gap-2">
             <Input
               value={testEmail}
