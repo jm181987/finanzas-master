@@ -339,6 +339,10 @@ Deno.serve(async (req) => {
 
     console.log("Signal received:", data?.event_id);
 
+    const emailRecipients = [payload.recipients, payloadData?.recipients, nestedPayload?.recipients, signal?.recipients]
+      .find(Array.isArray)
+      ?.filter((value) => typeof value === "string" && value.includes("@")) ?? [];
+
     let emailDispatch: { attempted: boolean; success: boolean; error?: string; disabled?: boolean } = {
       attempted: false,
       success: false,
