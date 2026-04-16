@@ -18,4 +18,7 @@ verify_jwt = false
 [functions.send-signal-email]
 verify_jwt = false
 
+[functions.webhook-signal-email]
+verify_jwt = false
+
 
