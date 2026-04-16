@@ -81,8 +81,61 @@ const AdminWebhooks = () => {
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [loadingEmailLogs, setLoadingEmailLogs] = useState(true);
   const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
+  const [webhookEmailEnabled, setWebhookEmailEnabled] = useState(true);
+  const [togglingWebhook, setTogglingWebhook] = useState(false);
 
   const dateLocale = lang === "pt" ? pt : es;
+
+  const getToken = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || "";
+  }, []);
+
+  const callSettings = useCallback(async (action: string, key: string, value?: string) => {
+    const token = await getToken();
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-settings`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ action, key, value }),
+      }
+    );
+    return res.json();
+  }, [getToken]);
+
+  // Load webhook enabled state
+  useEffect(() => {
+    callSettings("get", "webhook_signal_email_enabled").then((r) => {
+      if (r.success && r.data?.value !== undefined) {
+        setWebhookEmailEnabled(r.data.value === "true");
+      }
+    });
+  }, [callSettings]);
+
+  const toggleWebhookEmail = async () => {
+    setTogglingWebhook(true);
+    const newValue = !webhookEmailEnabled;
+    try {
+      const result = await callSettings("set", "webhook_signal_email_enabled", String(newValue));
+      if (result.success) {
+        setWebhookEmailEnabled(newValue);
+        toast.success(newValue
+          ? (lang === "pt" ? "Webhook ativado" : "Webhook activado")
+          : (lang === "pt" ? "Webhook desativado" : "Webhook desactivado"));
+      } else {
+        toast.error("Error: " + (result.error || "Unknown"));
+      }
+    } catch {
+      toast.error("Error al cambiar estado");
+    } finally {
+      setTogglingWebhook(false);
+    }
+  };
 
   const loadLogs = async () => {
     setLoadingLogs(true);
