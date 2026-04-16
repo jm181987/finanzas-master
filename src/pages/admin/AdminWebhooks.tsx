@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, Webhook, Send, RefreshCw, ChevronDown, ChevronUp, Clock, Mail } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Copy, Check, Webhook, Send, RefreshCw, ChevronDown, ChevronUp, Clock, Mail, Power } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";

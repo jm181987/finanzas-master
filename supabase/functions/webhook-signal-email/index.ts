@@ -23,18 +23,30 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // Check if webhook is enabled
+    const { data: enabledSetting } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "webhook_signal_email_enabled")
+      .maybeSingle();
+
+    if (enabledSetting?.value === "false") {
+      return new Response(
+        JSON.stringify({ error: "Webhook is disabled", disabled: true }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Determine recipients
     let emailRecipients: string[] = [];
 
     if (Array.isArray(payload.recipients) && payload.recipients.length > 0) {
-      // Use provided recipients
       emailRecipients = payload.recipients.filter(
         (r: unknown) => typeof r === "string" && r.includes("@")
       );
     } else {
-      // Fetch ALL platform users
-      const supabase = createClient(supabaseUrl, serviceKey);
       const allUsers: string[] = [];
       let page = 1;
       const perPage = 1000;
@@ -65,7 +77,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Call send-signal-email internally
     const emailRes = await fetch(
       `${supabaseUrl}/functions/v1/send-signal-email`,
       {
