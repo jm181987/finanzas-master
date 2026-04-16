@@ -111,8 +111,8 @@ const AdminWebhooks = () => {
   // Load webhook enabled state
   useEffect(() => {
     callSettings("get", "webhook_signal_email_enabled").then((r) => {
-      if (r.success && r.data?.value !== undefined) {
-        setWebhookEmailEnabled(r.data.value === "true");
+      if (r.ok && r.value !== undefined) {
+        setWebhookEmailEnabled(r.value === "true");
       }
     });
   }, [callSettings]);
@@ -122,7 +122,7 @@ const AdminWebhooks = () => {
     const newValue = !webhookEmailEnabled;
     try {
       const result = await callSettings("set", "webhook_signal_email_enabled", String(newValue));
-      if (result.success) {
+      if (result.ok) {
         setWebhookEmailEnabled(newValue);
         toast.success(newValue
           ? (lang === "pt" ? "Webhook ativado" : "Webhook activado")
