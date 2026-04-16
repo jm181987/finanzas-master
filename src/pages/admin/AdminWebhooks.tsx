@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, Webhook, Send, ExternalLink } from "lucide-react";
+import { Copy, Check, Webhook, Send, RefreshCw, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow } from "date-fns";
+import { es, pt } from "date-fns/locale";
 
 const WEBHOOK_URL = `https://tnjcigqqmwahnxcsljgk.supabase.co/functions/v1/receive-signal`;
 
@@ -29,10 +32,61 @@ const EXAMPLE_PAYLOAD = JSON.stringify({
   reasoning: [],
 }, null, 2);
 
+interface SignalLog {
+  id: string;
+  event_id: string | null;
+  source: string | null;
+  event_name: string | null;
+  event_type: string | null;
+  event_date_utc: string | null;
+  sentiment: string | null;
+  importance_level: number | null;
+  ticker: string | null;
+  asset_name: string | null;
+  title_en: string | null;
+  title_es: string | null;
+  title_pt: string | null;
+  body_en: string | null;
+  body_es: string | null;
+  body_pt: string | null;
+  has_reasoning: boolean | null;
+  reasoning: string | null;
+  created_at: string;
+  asset_type: string | null;
+  currency: string | null;
+  asset_trigger_price: number | null;
+  asset_threshold_price: number | null;
+  asset_change_percent: number | null;
+  asset_name_short: string | null;
+}
+
+const sentimentColor: Record<string, string> = {
+  Positive: "bg-green-500/20 text-green-400 border-green-500/30",
+  Negative: "bg-red-500/20 text-red-400 border-red-500/30",
+  Neutral: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+};
+
 const AdminWebhooks = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [logs, setLogs] = useState<SignalLog[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const dateLocale = language === "pt" ? pt : es;
+
+  const loadLogs = async () => {
+    setLoadingLogs(true);
+    const { data, error } = await (supabase.from as any)("trading_signals")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (!error && data) setLogs(data);
+    setLoadingLogs(false);
+  };
+
+  useEffect(() => { loadLogs(); }, []);
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(WEBHOOK_URL);
@@ -70,6 +124,7 @@ const AdminWebhooks = () => {
       const data = await res.json();
       if (data.success) {
         toast.success(t("webhook_test_success"));
+        loadLogs();
       } else {
         toast.error(t("webhook_test_error") + ": " + (data.error || "Unknown"));
       }
@@ -78,6 +133,19 @@ const AdminWebhooks = () => {
     } finally {
       setTesting(false);
     }
+  };
+
+  const buildJsonPreview = (log: SignalLog) => {
+    const obj: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(log)) {
+      if (v !== null && v !== undefined) obj[k] = v;
+    }
+    return JSON.stringify(obj, null, 2);
+  };
+
+  const getTitle = (s: SignalLog) => {
+    if (language === "pt") return s.title_pt || s.title_es || s.title_en || s.event_name || s.event_type || "—";
+    return s.title_es || s.title_en || s.event_name || s.event_type || "—";
   };
 
   return (
@@ -98,9 +166,7 @@ const AdminWebhooks = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 shrink-0">
-              POST
-            </Badge>
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 shrink-0">POST</Badge>
             <Input value={WEBHOOK_URL} readOnly className="font-mono text-sm" />
             <Button variant="outline" size="icon" onClick={copyUrl}>
               {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
@@ -120,6 +186,78 @@ const AdminWebhooks = () => {
             <Send className="h-4 w-4 mr-2" />
             {testing ? t("webhook_testing") : t("webhook_send_test")}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Logs viewer */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base">{t("webhook_logs_title")}</CardTitle>
+              <CardDescription>{t("webhook_logs_desc")}</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={loadLogs} disabled={loadingLogs}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loadingLogs ? "animate-spin" : ""}`} />
+              {t("webhook_logs_refresh")}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loadingLogs ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">{t("webhook_logs_loading")}</p>
+          ) : logs.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">{t("webhook_logs_empty")}</p>
+          ) : (
+            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+              {logs.map((log) => (
+                <div key={log.id} className="border border-border/50 rounded-lg overflow-hidden">
+                  {/* Header row */}
+                  <button
+                    onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: dateLocale })}
+                      </span>
+                    </div>
+
+                    {log.ticker && (
+                      <Badge variant="outline" className="text-xs shrink-0">{log.ticker}</Badge>
+                    )}
+
+                    {log.sentiment && (
+                      <Badge variant="outline" className={`text-[10px] shrink-0 ${sentimentColor[log.sentiment] || ""}`}>
+                        {log.sentiment}
+                      </Badge>
+                    )}
+
+                    <span className="text-sm text-foreground truncate flex-1">{getTitle(log)}</span>
+
+                    {log.source && (
+                      <span className="text-[10px] text-muted-foreground shrink-0">{log.source}</span>
+                    )}
+
+                    {expandedId === log.id
+                      ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                      : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                    }
+                  </button>
+
+                  {/* Expanded JSON */}
+                  {expandedId === log.id && (
+                    <div className="border-t border-border/30 bg-muted/20 px-4 py-3">
+                      <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap text-foreground/80 max-h-80 overflow-y-auto">
+                        {buildJsonPreview(log)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
